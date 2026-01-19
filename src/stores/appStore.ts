@@ -58,6 +58,7 @@ interface AppState {
     setSelectedRepository: (path: string | null) => void;
     setSelectedFile: (path: string | null) => Promise<void>;
     addRepositoryToWorkspace: (workspaceId: string, repoPath: string) => Promise<void>;
+    hideRepository: (path: string) => void;
 
     // Git Operations
     fetch: () => Promise<void>;

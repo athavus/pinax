@@ -465,7 +465,7 @@ export function MainArea() {
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-muted-foreground p-12 text-center animate-in fade-in duration-1000">
                             <div className="max-w-md">
-                                <div className="w-16 h-16 mx-auto mb-6 p-4 rounded-none bg-primary/5 border border-primary/10 flex items-center justify-center">
+                                <div className="w-16 h-16 mx-auto mb-6 p-4 rounded-none bg-primary/5 flex items-center justify-center">
                                     <FileText className="w-full h-full text-primary opacity-20" />
                                 </div>
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-foreground/40 mb-2">No file selected</h3>
