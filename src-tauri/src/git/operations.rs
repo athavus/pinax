@@ -1,21 +1,63 @@
 use std::path::Path;
-use super::executor::{execute, execute_string, GitResult};
+use super::executor::{execute, execute_string, GitResult, GitError};
 
 /// Fetch changes from remote
 pub async fn fetch(path: &Path) -> GitResult<()> {
-    execute(path, &["fetch", "--all"]).await?;
+    let output = execute(path, &["fetch", "--all"]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "fetch".to_string(),
+        });
+    }
     Ok(())
 }
 
 /// Pull changes from remote
 pub async fn pull(path: &Path) -> GitResult<()> {
-    execute(path, &["pull"]).await?;
+    let output = execute(path, &["pull"]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "pull".to_string(),
+        });
+    }
     Ok(())
 }
 
 /// Push changes to remote
 pub async fn push(path: &Path) -> GitResult<()> {
-    execute(path, &["push"]).await?;
+    let output = execute(path, &["push"]).await?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        
+        // Check if it's a "no upstream" error
+        if stderr.contains("has no upstream branch") || stderr.contains("no configured push destination") {
+            // Try to get current branch and push with -u origin <branch>
+            if let Ok(branch) = execute_string(path, &["rev-parse", "--abbrev-ref", "HEAD"]).await {
+                let u_output = execute(path, &["push", "-u", "origin", &branch]).await?;
+                if u_output.status.success() {
+                    return Ok(());
+                }
+                
+                // If the second attempt also fails, return that error
+                let u_stderr = String::from_utf8_lossy(&u_output.stderr);
+                return Err(GitError {
+                    message: u_stderr.to_string(),
+                    command: format!("push -u origin {}", branch),
+                });
+            }
+        }
+        
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "push".to_string(),
+        });
+    }
+    
     Ok(())
 }
 

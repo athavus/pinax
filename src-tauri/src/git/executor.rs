@@ -33,10 +33,13 @@ impl From<GitError> for String {
 
 /// Execute a Git command in the specified directory
 pub async fn execute(repo_path: &Path, args: &[&str]) -> GitResult<Output> {
-    let output = Command::new("git")
+    let mut command = Command::new("git");
+    let output = command
         .args(args)
         .current_dir(repo_path)
+        .envs(std::env::vars())
         .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
         .output()
         .await
         .map_err(|e| GitError {
