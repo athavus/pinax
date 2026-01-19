@@ -1,0 +1,64 @@
+{
+    "version": 1,
+    "bindings": [
+        {
+            "key": "mod+p",
+            "command": "command-palette.toggle",
+            "description": "Toggle command palette"
+        },
+        {
+            "key": "mod+k",
+            "command": "command-palette.toggle",
+            "description": "Toggle command palette (alternative)"
+        },
+        {
+            "key": "escape",
+            "command": "modal.close",
+            "when": "modalOpen",
+            "description": "Close any open modal"
+        },
+        {
+            "key": "mod+r",
+            "command": "repository.refresh",
+            "description": "Refresh current repository status"
+        },
+        {
+            "key": "mod+shift+e",
+            "command": "sidebar.focus",
+            "description": "Focus the sidebar"
+        },
+        {
+            "key": "j",
+            "command": "navigation.down",
+            "when": "listFocused",
+            "description": "Navigate down in list"
+        },
+        {
+            "key": "k",
+            "command": "navigation.up",
+            "when": "listFocused",
+            "description": "Navigate up in list"
+        },
+        {
+            "key": "enter",
+            "command": "item.select",
+            "when": "listFocused",
+            "description": "Select current item"
+        },
+        {
+            "key": "mod+1",
+            "command": "workspace.select.1",
+            "description": "Select first workspace"
+        },
+        {
+            "key": "mod+2",
+            "command": "workspace.select.2",
+            "description": "Select second workspace"
+        },
+        {
+            "key": "mod+3",
+            "command": "workspace.select.3",
+            "description": "Select third workspace"
+        }
+    ]
+}
