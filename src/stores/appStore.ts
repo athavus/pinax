@@ -198,7 +198,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             await gitPull(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isPulling: false, isLoading: false });
+            set({ repositoryStatus: status, isPulling: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
             await get().loadHistory();
         } catch (error) {
             set({ error: `Pull failed: ${error}`, isPulling: false, isLoading: false });
@@ -212,7 +212,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             await gitPush(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isPushing: false, isLoading: false });
+            set({ repositoryStatus: status, isPushing: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
             await get().loadHistory();
         } catch (error) {
             set({ error: `Push failed: ${error}`, isPushing: false, isLoading: false });
@@ -226,7 +226,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             await gitCommit(selectedRepositoryPath, message);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            set({ repositoryStatus: status, isLoading: false, selectedFile: null, selectedFileDiff: null });
             await get().loadHistory();
         } catch (error) {
             set({ error: `Commit failed: ${error}`, isLoading: false });
@@ -357,6 +357,17 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ isLoading: true });
         try {
             const status = await getRepositoryStatus(selectedRepositoryPath);
+            const { selectedFile } = get();
+
+            // Check if selected file still exists in the new status
+            const stillExists = status.staged.find(f => f.path === selectedFile) ||
+                status.unstaged.find(f => f.path === selectedFile) ||
+                status.untracked.includes(selectedFile || "");
+
+            if (!stillExists) {
+                set({ selectedFile: null, selectedFileDiff: null });
+            }
+
             set({ repositoryStatus: status, isLoading: false });
         } catch (error) {
             set({
