@@ -96,18 +96,18 @@ export function Sidebar() {
                 onFocus={() => setNavigationContext("sidebar")}
                 className={cn(
                     "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border",
-                    "outline-none transition-all duration-300 rounded-2xl overflow-hidden m-4 shadow-2xl"
+                    "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
                 )}
             >
                 {/* Header with high impact */}
-                <header className="flex flex-col gap-6 px-8 py-14">
-                    <div className="flex items-center gap-5">
-                        <div className="p-4 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_32px_rgba(var(--primary),0.3)] animate-pulse-slow">
-                            <FolderGit2 className="w-8 h-8 font-black" />
+                <header className="flex flex-col gap-4 px-6 pt-8 pb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-none bg-primary text-primary-foreground shadow-[0_4px_24px_rgba(var(--primary),0.3)] animate-pulse-slow">
+                            <FolderGit2 className="w-5 h-5 font-black" />
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="font-black text-5xl tracking-tighter text-foreground leading-none">Pinax</h1>
-                            <span className="text-xs font-black uppercase tracking-[0.5em] text-primary mt-4 opacity-100">Workbench</span>
+                            <h1 className="font-black text-2xl tracking-tighter text-foreground leading-none">Pinax</h1>
+                            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary mt-1 opacity-80">Workbench</span>
                         </div>
                     </div>
                 </header>
@@ -117,16 +117,16 @@ export function Sidebar() {
 
                     {/* Repositories */}
                     <div className="px-0">
-                        <div className="px-8 mb-6 flex items-center justify-between">
+                        <div className="px-8 mt-2 mb-4 flex items-center justify-between">
                             <h2 className="text-[11px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">
                                 Repositories
                             </h2>
-                            <span className="text-[10px] font-black text-primary/40 px-2 py-0.5 bg-primary/5 rounded-full">
+                            <span className="text-[10px] font-black text-primary/40 px-2 py-0.5 bg-primary/5 rounded-none">
                                 {repositories.length}
                             </span>
                         </div>
 
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-0.5">
                             {repositories.length > 0 ? (
                                 repositories.map((repo) => (
                                     <RepositoryItem
@@ -151,7 +151,7 @@ export function Sidebar() {
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
                         {repositories.length} PROJECTS
                     </span>
-                    <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_12px_rgba(var(--primary),0.4)]" />
+                    <div className="w-1.5 h-4 bg-primary rounded-none shadow-[0_0_12px_rgba(var(--primary),0.4)]" />
                 </footer>
             </aside>
         </DndContext>
@@ -193,9 +193,9 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                     <button
                         onClick={onClick}
                         className={cn(
-                            "w-full flex items-center gap-5 px-8 py-5 text-left outline-none transition-all duration-300 border-l-4",
+                            "w-full flex items-center gap-4 px-8 py-2.5 text-left outline-none transition-all duration-300 border-l-4",
                             isSelected
-                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-2xl"
+                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-none"
                                 : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30",
                             isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20"
                         )}

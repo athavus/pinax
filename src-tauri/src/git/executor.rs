@@ -63,7 +63,7 @@ pub async fn execute_string(repo_path: &Path, args: &[&str]) -> GitResult<String
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    Ok(stdout.trim().to_string())
+    Ok(stdout.trim_end().to_string())
 }
 
 /// Check if a directory is a Git repository

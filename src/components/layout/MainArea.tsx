@@ -32,8 +32,13 @@ export function MainArea() {
         commit,
         checkout,
         setSelectedFile,
+        isFetching,
+        isPulling,
+        isPushing,
         error,
         clearError,
+        undoCommit,
+        resolveConflict,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -68,19 +73,19 @@ export function MainArea() {
 
     if (!selectedRepositoryPath || !selectedRepo) {
         return (
-            <main className="flex-1 flex flex-col bg-background/80 backdrop-blur-3xl overflow-hidden border border-border/40 rounded-3xl m-4 shadow-2xl">
+            <main className="flex-1 flex flex-col bg-background/80 backdrop-blur-3xl overflow-hidden border border-border/40 rounded-none m-4 shadow-2xl">
                 <WelcomeView />
             </main>
         );
     }
 
     return (
-        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/20 rounded-3xl m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
+        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/20 rounded-none m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
             {/* Global Error Notification */}
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-500">
-                    <div className="bg-destructive/10 backdrop-blur-xl border border-destructive/20 px-6 py-3 rounded-2xl flex items-center gap-4 shadow-2xl">
-                        <div className="p-2 rounded-lg bg-destructive/20 text-destructive">
+                    <div className="bg-destructive/10 backdrop-blur-xl border border-destructive/20 px-6 py-3 rounded-none flex items-center gap-4 shadow-2xl">
+                        <div className="p-2 rounded-none bg-destructive/20 text-destructive">
                             <RefreshCw className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-bold text-destructive/90">{error}</span>
@@ -99,7 +104,7 @@ export function MainArea() {
                 <div className="flex items-center h-16 px-6 gap-6">
                     {/* Repository Indicator */}
                     <div className="flex items-center gap-4 px-4 py-2 border border-transparent max-w-[300px] group/repo">
-                        <div className="p-2 rounded-xl bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5">
+                        <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5">
                             <FileText className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -115,7 +120,7 @@ export function MainArea() {
                         <button
                             onClick={() => setBranchSelectorOpen(!branchSelectorOpen)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all rounded-xl group",
+                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all rounded-none group",
                                 branchSelectorOpen && "ring-2 ring-primary/30 bg-primary/20"
                             )}
                         >
@@ -130,7 +135,7 @@ export function MainArea() {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setBranchSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-card/80 backdrop-blur-2xl border border-border/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-2xl overflow-hidden flex flex-col">
+                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-card/80 backdrop-blur-2xl border border-border/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
                                     {/* Tabs (Branches / Pull Requests) */}
                                     <div className="flex border-b border-border/10 bg-muted/40 h-12">
                                         <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
@@ -148,11 +153,11 @@ export function MainArea() {
                                                 value={branchFilter}
                                                 onChange={(e) => setBranchFilter(e.target.value)}
                                                 placeholder="Filter branches"
-                                                className="w-full bg-background/50 border border-border/40 py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-primary/60 rounded-xl placeholder:text-muted-foreground/30 shadow-inner"
+                                                className="w-full bg-background/50 border border-border/40 py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-primary/60 rounded-none placeholder:text-muted-foreground/30 shadow-inner"
                                             />
                                         </div>
                                         <button
-                                            className="px-4 py-2.5 bg-secondary text-secondary-foreground text-xs font-bold hover:brightness-110 shadow-sm transition-all rounded-xl"
+                                            className="px-4 py-2.5 bg-secondary text-secondary-foreground text-xs font-bold hover:brightness-110 shadow-sm transition-all rounded-none"
                                             onClick={() => {/* TODO: Open create branch dialog */ }}
                                         >
                                             New branch
@@ -171,7 +176,7 @@ export function MainArea() {
                                                     className={cn(
                                                         "w-full flex items-center gap-4 px-5 py-3 text-sm font-bold text-left transition-all",
                                                         defaultBranch.is_current
-                                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 mx-2 w-[calc(100%-1rem)] rounded-xl"
+                                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 mx-2 w-[calc(100%-1rem)] rounded-none"
                                                             : "hover:bg-primary/10 text-muted-foreground hover:text-foreground"
                                                     )}
                                                 >
@@ -194,7 +199,7 @@ export function MainArea() {
                                                             key={branch.name}
                                                             onClick={() => handleBranchSwitch(branch.name)}
                                                             className={cn(
-                                                                "w-full flex items-center gap-4 px-4 py-3 text-sm font-medium text-left transition-all rounded-xl",
+                                                                "w-full flex items-center gap-4 px-4 py-3 text-sm font-medium text-left transition-all rounded-none",
                                                                 branch.is_current
                                                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                                                                     : "hover:bg-primary/5 text-muted-foreground/80 hover:text-foreground"
@@ -215,7 +220,7 @@ export function MainArea() {
                                     </div>
 
                                     <div className="p-4 border-t border-border/10 bg-muted/40">
-                                        <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-xl text-primary/80">
+                                        <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-none text-primary/80">
                                             <GitBranch className="w-4 h-4" />
                                             Merge into <strong>{repositoryStatus?.branch || "main"}</strong>
                                         </button>
@@ -228,33 +233,33 @@ export function MainArea() {
                     <div className="w-px h-6 bg-border/20" />
 
                     {/* Git Actions */}
-                    <div className="flex items-center gap-3 ml-auto">
+                    <div className="flex items-center gap-3 ml-auto shrink-0">
                         <button
                             onClick={fetch}
                             disabled={isLoading}
-                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
+                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-none text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50 min-w-[120px] justify-center"
                         >
-                            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
-                            Fetch
+                            <RefreshCw className={cn("w-3.5 h-3.5", isFetching && "animate-spin")} />
+                            {isFetching ? "Fetching" : "Fetch"}
                         </button>
                         <button
                             onClick={pull}
                             disabled={isLoading}
-                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
+                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-none text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50 min-w-[110px] justify-center"
                         >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                            Pull
+                            <ArrowDown className={cn("w-3.5 h-3.5", isPulling && "animate-bounce")} />
+                            {isPulling ? "Pulling" : "Pull"}
                         </button>
                         <button
                             onClick={push}
                             disabled={isLoading}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border active:scale-[0.98] disabled:opacity-50",
-                                isLoading ? "bg-primary/5 text-primary/40 border-primary/5" : "bg-primary/10 text-primary border-primary/5 hover:bg-primary/20"
+                                "flex items-center gap-3 px-5 py-2.5 rounded-none text-xs font-black uppercase tracking-widest transition-all border active:scale-[0.98] disabled:opacity-50 min-w-[130px] justify-center",
+                                isPushing ? "bg-primary/5 text-primary/40 border-primary/5" : "bg-primary/10 text-primary border-primary/5 hover:bg-primary/20"
                             )}
                         >
-                            <Upload className={cn("w-3.5 h-3.5", isLoading && "animate-pulse")} />
-                            {isLoading ? "Pushing..." : "Push"}
+                            <Upload className={cn("w-3.5 h-3.5", isPushing && "animate-pulse")} />
+                            {isPushing ? "Pushing" : "Push"}
                         </button>
                     </div>
                 </div>
@@ -300,13 +305,15 @@ export function MainArea() {
                             <div className="p-3 space-y-6">
                                 {repositoryStatus && (
                                     <>
+                                        <FileList title="Conflicts" files={repositoryStatus.conflicts} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
                                         <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
                                         <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
-                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
+                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
 
                                         {repositoryStatus.staged.length === 0 &&
                                             repositoryStatus.unstaged.length === 0 &&
-                                            repositoryStatus.untracked.length === 0 && (
+                                            repositoryStatus.untracked.length === 0 &&
+                                            repositoryStatus.conflicts.length === 0 && (
                                                 <div className="py-24 text-center animate-in fade-in duration-1000">
                                                     <div className="w-12 h-12 mx-auto mb-4 rounded-sm bg-primary/5 flex items-center justify-center border border-primary/10">
                                                         <Check className="w-6 h-6 text-primary opacity-30" />
@@ -320,7 +327,7 @@ export function MainArea() {
                         ) : (
                             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
                                 {commits.length > 0 ? (
-                                    commits.map((commit) => {
+                                    commits.map((commit, index) => {
                                         let dateStr = "Unknown Date";
                                         try {
                                             const d = new Date(commit.timestamp);
@@ -334,8 +341,19 @@ export function MainArea() {
                                         return (
                                             <div
                                                 key={commit.hash}
-                                                className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-2xl transition-all group border border-transparent hover:border-border/10"
+                                                className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-none transition-all group border border-transparent hover:border-border/10 relative"
                                             >
+                                                {index === 0 && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            undoCommit();
+                                                        }}
+                                                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest border border-destructive/20 hover:bg-destructive/20 rounded-none shadow-sm"
+                                                    >
+                                                        Undo
+                                                    </button>
+                                                )}
                                                 <div className="flex items-center justify-between gap-4">
                                                     <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
                                                     <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
@@ -363,7 +381,7 @@ export function MainArea() {
                             value={commitMessage}
                             onChange={(e) => setCommitMessage(e.target.value)}
                             placeholder="Briefly describe your changes..."
-                            className="w-full min-h-[100px] p-4 text-sm border border-border/20 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-2xl font-medium shadow-inner"
+                            className="w-full min-h-[100px] p-4 text-sm border border-border/20 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-none font-medium shadow-inner"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                                     handleCommit();
@@ -374,7 +392,7 @@ export function MainArea() {
                             onClick={handleCommit}
                             disabled={!commitMessage.trim() || isLoading}
                             className={cn(
-                                "w-full mt-4 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] active:scale-[0.98] transition-all rounded-2xl flex items-center justify-center gap-3",
+                                "w-full mt-4 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] active:scale-[0.98] transition-all rounded-none flex items-center justify-center gap-3",
                                 isCommitted
                                     ? "bg-green-500/20 text-green-500 border border-green-500/30"
                                     : "bg-primary/20 text-primary hover:bg-primary/30 shadow-lg shadow-primary/5 border border-primary/10",
@@ -393,33 +411,39 @@ export function MainArea() {
                     </div>
                 </div>
 
-                {/* Right Column: Diff View */}
                 <div className="flex-1 bg-background flex flex-col overflow-hidden">
-                    {selectedFileDiff ? (
+                    {selectedFile ? (
                         <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in duration-300">
-                            <div className="h-12 border-b border-border/20 flex items-center px-6 bg-muted/40 backdrop-blur-sm">
+                            <div className="h-12 border-b border-border/20 flex items-center px-6 bg-muted/40 backdrop-blur-sm justify-between gap-4">
                                 <span className="text-[11px] font-mono text-muted-foreground truncate">{selectedFile}</span>
-                            </div>
-                            <div className="flex-1 overflow-auto bg-background/20 font-mono text-[13px] leading-relaxed p-6 whitespace-pre">
-                                {selectedFileDiff.split('\n').map((line, idx) => {
-                                    const isAdded = line.startsWith('+');
-                                    const isDeleted = line.startsWith('-');
-                                    const isHeader = line.startsWith('@@');
 
-                                    return (
-                                        <div
-                                            key={idx}
-                                            className={cn(
-                                                "px-2 -mx-2 border-l-2 border-transparent",
-                                                isAdded ? "bg-[hsl(var(--git-added))/0.1] text-[hsl(var(--git-added))] border-[hsl(var(--git-added))]" :
-                                                    isDeleted ? "bg-[hsl(var(--git-deleted))/0.1] text-[hsl(var(--git-deleted))] border-[hsl(var(--git-deleted))]" :
-                                                        isHeader ? "text-primary/60 bg-primary/5 italic" : ""
-                                            )}
-                                        >
-                                            {line}
+                                {repositoryStatus?.conflicts.find(c => c.path === selectedFile) && (
+                                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-500">
+                                        <div className="flex bg-destructive/5 border border-destructive/20 p-1 rounded-none gap-1">
+                                            <button
+                                                onClick={() => resolveConflict(selectedFile, "ours")}
+                                                className="px-3 py-1.5 bg-background border border-border/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest transition-all rounded-none"
+                                            >
+                                                Use Ours
+                                            </button>
+                                            <button
+                                                onClick={() => resolveConflict(selectedFile, "theirs")}
+                                                className="px-3 py-1.5 bg-background border border-border/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest transition-all rounded-none"
+                                            >
+                                                Use Theirs
+                                            </button>
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 overflow-auto bg-[#0d1117] font-mono text-[12px] leading-[1.6]">
+                                {selectedFileDiff ? (
+                                    <GitHubDiffView diff={selectedFileDiff} />
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-muted-foreground/30 text-[10px] uppercase tracking-widest font-black">
+                                        No diff available or loading...
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -436,6 +460,118 @@ export function MainArea() {
                 </div>
             </div>
         </main>
+    );
+}
+
+function GitHubDiffView({ diff }: { diff: string }) {
+    const lines = diff.split('\n');
+    let oldLineCount = 0;
+    let newLineCount = 0;
+
+    const parsedLines = lines.map((line) => {
+        let type: 'normal' | 'add' | 'delete' | 'hunk' | 'meta' = 'normal';
+        let oldLine: number | undefined;
+        let newLine: number | undefined;
+
+        if (line.startsWith('@@')) {
+            type = 'hunk';
+            const match = line.match(/@@ -(\d+),?\d* \+(\d+),?\d* @@/);
+            if (match) {
+                oldLineCount = parseInt(match[1]) - 1;
+                newLineCount = parseInt(match[2]) - 1;
+            }
+        } else if (line.startsWith('+') && !line.startsWith('+++')) {
+            type = 'add';
+            newLineCount++;
+            newLine = newLineCount;
+        } else if (line.startsWith('-') && !line.startsWith('---')) {
+            type = 'delete';
+            oldLineCount++;
+            oldLine = oldLineCount;
+        } else if (line.startsWith(' ') || line === '') {
+            type = 'normal';
+            oldLineCount++;
+            newLineCount++;
+            oldLine = oldLineCount;
+            newLine = newLineCount;
+        } else {
+            type = 'meta';
+        }
+
+        return { content: line, type, oldLine, newLine };
+    });
+
+    return (
+        <div className="min-w-full inline-block pb-12">
+            {parsedLines.map((line, idx) => {
+                if (line.type === 'meta' && idx < 5) return null; // Hide initial git diff meta lines
+
+                return (
+                    <div
+                        key={idx}
+                        className={cn(
+                            "flex group min-h-[22px]",
+                            line.type === 'add' ? "bg-[#2ea0431a]" :
+                                line.type === 'delete' ? "bg-[#f851491a]" :
+                                    line.type === 'hunk' ? "bg-[#388bfd1a] border-y border-[#388bfd33] text-[#7d8590] sticky top-0 z-10" :
+                                        line.type === 'meta' ? "text-[#7d8590] bg-muted/5 opacity-40 px-6 py-2 border-y border-border/5 my-2" :
+                                            "hover:bg-[#1f242c]"
+                        )}
+                    >
+                        {/* Line Numbers Gutter */}
+                        {line.type !== 'meta' && (
+                            <div className="w-28 shrink-0 flex select-none text-[#8b949e] border-r border-[#30363d] mr-4 bg-[#0d1117] group-hover:bg-[#1f242c] transition-colors">
+                                <div className="w-14 text-right pr-3 py-0.5 font-mono text-[11px] opacity-60">
+                                    {line.oldLine || ''}
+                                </div>
+                                <div className="w-14 text-right pr-3 py-0.5 font-mono text-[11px] opacity-60">
+                                    {line.newLine || ''}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Content */}
+                        <div className={cn(
+                            "flex-1 py-0.5 whitespace-pre pr-6 font-mono",
+                            line.type === 'add' ? "text-[#aff5b4] bg-[#2ea04333]" :
+                                line.type === 'delete' ? "text-[#ffdcd7] bg-[#f8514933]" :
+                                    line.type === 'hunk' ? "text-[#7d8590] font-bold py-1.5 px-2" :
+                                        line.type === 'meta' ? "italic text-[11px]" :
+                                            "text-[#c9d1d9]"
+                        )}>
+                            <span className="inline-block w-6 opacity-30 select-none text-center font-mono">
+                                {line.type === 'add' ? '+' : line.type === 'delete' ? '-' : ' '}
+                            </span>
+                            {(() => {
+                                const content = line.type === 'add' || line.type === 'delete' ? line.content.substring(1) : line.content;
+                                return highlightCode(content);
+                            })()}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function highlightCode(code: string) {
+    const keywords = /\b(pub|fn|use|let|const|async|await|import|export|function|return|if|else|match|switch|case|default|type|interface|enum|struct|impl|mut|self|true|false)\b/g;
+    const strings = /("[^"]*"|'[^']*'|`[^`]*`)/g;
+    const comments = /(\/\/.*|\/\*[\s\S]*?\*\/)/g;
+    const types = /\b(u8|u16|u32|u64|i8|i16|i32|i64|usize|isize|String|Vec|Option|Result|String|number|boolean|any|void)\b/g;
+
+    const parts = code.split(/([ \t\n()\[\]{}.,:;])/);
+
+    return (
+        <>
+            {parts.map((part, i) => {
+                if (keywords.test(part)) return <span key={i} className="text-[#ff7b72]">{part}</span>;
+                if (types.test(part)) return <span key={i} className="text-[#ffa657]">{part}</span>;
+                if (strings.test(part)) return <span key={i} className="text-[#a5d6ff]">{part}</span>;
+                if (comments.test(part)) return <span key={i} className="text-[#8b949e] italic">{part}</span>;
+                return <span key={i}>{part}</span>;
+            })}
+        </>
     );
 }
 
@@ -461,7 +597,7 @@ function FileList({
                         key={file.path}
                         onClick={() => onFileSelect(file.path)}
                         className={cn(
-                            "w-full flex items-center gap-4 px-4 py-3 transition-all text-left group border border-transparent rounded-xl",
+                            "w-full flex items-center gap-4 px-4 py-3 transition-all text-left group border border-transparent rounded-none",
                             selectedFile === file.path
                                 ? "bg-primary/20 border-primary/30 text-primary shadow-lg shadow-primary/5"
                                 : "hover:bg-primary/10 text-muted-foreground/80 hover:text-foreground"
@@ -471,7 +607,8 @@ function FileList({
                             "w-2 h-2 rounded-full shrink-0 shadow-sm",
                             file.status === "added" || file.status === "untracked" ? "bg-[hsl(var(--git-added))]" :
                                 file.status === "modified" ? "bg-[hsl(var(--git-modified))]" :
-                                    file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" : "bg-muted-foreground"
+                                    file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" :
+                                        file.status === "conflicted" ? "bg-destructive animate-pulse" : "bg-muted-foreground"
                         )} />
                         <span className="text-sm font-bold truncate flex-1">{file.path}</span>
                         {file.status && (
@@ -479,7 +616,8 @@ function FileList({
                                 "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity",
                                 file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
                                     file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
-                                        file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" : ""
+                                        file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :
+                                            file.status === "conflicted" ? "text-destructive" : ""
                             )}>
                                 {file.status}
                             </span>

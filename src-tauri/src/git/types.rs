@@ -14,6 +14,7 @@ pub struct RepositoryStatus {
     pub staged: Vec<FileChange>,
     pub unstaged: Vec<FileChange>,
     pub untracked: Vec<String>,
+    pub conflicts: Vec<FileChange>,
 }
 
 impl Default for RepositoryStatus {
@@ -26,6 +27,7 @@ impl Default for RepositoryStatus {
             staged: Vec::new(),
             unstaged: Vec::new(),
             untracked: Vec::new(),
+            conflicts: Vec::new(),
         }
     }
 }
@@ -46,6 +48,7 @@ pub enum FileStatus {
     Deleted,
     Renamed,
     Copied,
+    Conflicted,
 }
 
 /// A Git branch

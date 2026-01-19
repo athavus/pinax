@@ -77,11 +77,11 @@ export function WorkspaceSelect() {
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={cn(
-                        "w-full flex items-center gap-4 px-5 py-4 bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 rounded-2xl transition-all duration-300 hover:bg-primary/15 hover:border-primary/20 text-left shadow-sm group active:scale-[0.98]",
+                        "w-full flex items-center gap-4 px-5 py-4 bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 rounded-none transition-all duration-300 hover:bg-primary/15 hover:border-primary/20 text-left shadow-sm group active:scale-[0.98]",
                         isOpen && "ring-2 ring-primary/20 border-primary/30 bg-primary/20 shadow-lg shadow-primary/5"
                     )}
                 >
-                    <div className="p-2.5 rounded-xl bg-primary/20 text-primary shadow-sm group-hover:scale-110 group-hover:bg-primary/30 transition-all duration-500 ring-4 ring-primary/5">
+                    <div className="p-2.5 rounded-none bg-primary/20 text-primary shadow-sm group-hover:scale-110 group-hover:bg-primary/30 transition-all duration-500 ring-4 ring-primary/5">
                         {selectedWorkspaceId === "uncategorized" ? <FolderOpen className="w-4 h-4" /> :
                             !selectedWorkspaceId || selectedWorkspaceId === "all" ? <LayoutGrid className="w-4 h-4" /> :
                                 <Briefcase className="w-4 h-4" />}
@@ -104,10 +104,10 @@ export function WorkspaceSelect() {
 
                 {/* Dropdown Menu */}
                 {isOpen && (
-                    <div className="absolute top-[calc(100%+8px)] left-6 right-6 z-50 bg-popover/95 backdrop-blur-2xl border border-border/20 p-2 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute top-[calc(100%+8px)] left-6 right-6 z-50 bg-popover/95 backdrop-blur-2xl border border-border/20 p-2 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                         <button
                             className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl outline-none transition-all",
+                                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-none outline-none transition-all",
                                 (!selectedWorkspaceId || selectedWorkspaceId === "all") ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                             )}
                             onClick={() => handleSelect(null)}
@@ -119,7 +119,7 @@ export function WorkspaceSelect() {
 
                         <button
                             className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl outline-none transition-all mt-1",
+                                "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-none outline-none transition-all mt-1",
                                 selectedWorkspaceId === "uncategorized" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                             )}
                             onClick={() => handleSelect("uncategorized")}
@@ -141,7 +141,7 @@ export function WorkspaceSelect() {
                                     <button
                                         key={workspace.id}
                                         className={cn(
-                                            "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl outline-none transition-all",
+                                            "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-none outline-none transition-all",
                                             selectedWorkspaceId === workspace.id ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                                         )}
                                         onClick={() => handleSelect(workspace.id)}
@@ -163,7 +163,7 @@ export function WorkspaceSelect() {
                         <DialogTrigger asChild>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-primary hover:bg-primary/10 rounded-xl outline-none transition-all uppercase tracking-widest"
+                                className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-primary hover:bg-primary/10 rounded-none outline-none transition-all uppercase tracking-widest"
                             >
                                 <Plus className="w-4 h-4" />
                                 New Workspace
@@ -184,7 +184,7 @@ export function WorkspaceSelect() {
                                 value={newWorkspaceName}
                                 onChange={(e) => setNewWorkspaceName(e.target.value)}
                                 placeholder="e.g. Frontend, Tools, Personal"
-                                className="w-full px-5 py-4 rounded-2xl bg-background border border-border/40 focus:outline-none focus:ring-4 focus:ring-primary/20 text-base font-bold shadow-inner"
+                                className="w-full px-5 py-4 rounded-none bg-background border border-border/40 focus:outline-none focus:ring-4 focus:ring-primary/20 text-base font-bold shadow-inner"
                             />
                         </div>
                         <DialogFooter>
@@ -196,7 +196,7 @@ export function WorkspaceSelect() {
                             <button
                                 type="submit"
                                 disabled={!newWorkspaceName.trim() || isLoading}
-                                className="px-8 py-3 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:brightness-110 disabled:opacity-50 transition-all rounded-xl"
+                                className="px-8 py-3 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:brightness-110 disabled:opacity-50 transition-all rounded-none"
                             >
                                 Create
                             </button>

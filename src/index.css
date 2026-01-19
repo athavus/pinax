@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 :root {
@@ -30,7 +31,7 @@
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
   --radius: 0;
-  --font-sans: "Inter", sans-serif;
+  --radius: 0;
 
   /* Git Specific */
   --git-added: 142 76% 36%;
@@ -55,27 +56,24 @@
 }
 
 .dark {
-  /* Soft Deep Space Theme (Slate/Indigo) - Low Contrast */
-  --background: 222 35% 12%;
-  /* Much lighter, less blue saturation */
-  --foreground: 215 20% 90%;
-  /* Softer off-white */
+  /* Zinc-800 / Deep Graphite palette */
+  --background: 240 10% 4%;
+  --foreground: 240 5% 96%;
 
-  --card: 222 35% 15%;
-  --card-foreground: 215 20% 90%;
+  --card: 240 6% 10%;
+  --card-foreground: 240 5% 96%;
 
-  --popover: 222 35% 16%;
-  --popover-foreground: 215 20% 90%;
+  --popover: 240 6% 12%;
+  --popover-foreground: 240 5% 96%;
 
   --primary: 239 60% 70%;
-  /* Desaturated, softer Indigo */
-  --primary-foreground: 222 35% 12%;
+  --primary-foreground: 240 10% 4%;
 
-  --secondary: 222 35% 18%;
-  --secondary-foreground: 215 20% 90%;
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 240 5% 96%;
 
-  --muted: 222 35% 16%;
-  --muted-foreground: 215 15% 60%;
+  --muted: 240 4% 14%;
+  --muted-foreground: 240 5% 65%;
   /* Softer muted text */
 
   --accent: 239 60% 70% / 0.12;
@@ -84,19 +82,17 @@
   --destructive: 0 60% 65%;
   --destructive-foreground: 215 20% 98%;
 
-  --border: 222 35% 22% / 0.4;
-  /* Very subtle borders */
-  --input: 222 35% 18%;
+  --border: 240 5% 18%;
+  --input: 240 4% 16%;
   --ring: 239 60% 70%;
 
-  --sidebar: 222 35% 10%;
-  /* Slightly darker than background but still light */
-  --sidebar-foreground: 215 15% 75%;
+  --sidebar: 240 6% 8%;
+  --sidebar-foreground: 240 5% 75%;
   --sidebar-primary: 239 60% 70%;
-  --sidebar-primary-foreground: 215 20% 90%;
-  --sidebar-accent: 239 60% 70% / 0.08;
+  --sidebar-primary-foreground: 240 5% 96%;
+  --sidebar-accent: 240 4% 16%;
   --sidebar-accent-foreground: 239 60% 70%;
-  --sidebar-border: 222 35% 16%;
+  --sidebar-border: 240 5% 15%;
   --sidebar-ring: 239 60% 70%;
 
   --radius: 0.75rem;
@@ -105,7 +101,7 @@
 
 body {
   font-family: var(--font-sans);
-  /* Changed font-family */
+  font-variant-ligatures: none;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   overflow: hidden;

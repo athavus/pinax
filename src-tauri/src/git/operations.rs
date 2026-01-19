@@ -66,7 +66,27 @@ pub async fn commit(path: &Path, message: &str) -> GitResult<()> {
     // Stage all changes first
     execute(path, &["add", "-A"]).await?;
     // Then commit
-    execute(path, &["commit", "-m", message]).await?;
+    let output = execute(path, &["commit", "-m", message]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "commit".to_string(),
+        });
+    }
+    Ok(())
+}
+
+/// Undo the last commit (soft reset)
+pub async fn undo_commit(path: &Path) -> GitResult<()> {
+    let output = execute(path, &["reset", "--soft", "HEAD~1"]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "reset --soft HEAD~1".to_string(),
+        });
+    }
     Ok(())
 }
 
@@ -79,6 +99,32 @@ pub async fn checkout(path: &Path, branch_name: &str) -> GitResult<()> {
 /// Create and checkout a new branch
 pub async fn create_branch(path: &Path, branch_name: &str) -> GitResult<()> {
     execute(path, &["checkout", "-b", branch_name]).await?;
+    Ok(())
+}
+
+/// Resolve a merge conflict by choosing a version
+pub async fn resolve_conflict(path: &Path, file_path: &str, resolution: &str) -> GitResult<()> {
+    let arg = match resolution {
+        "ours" => "--ours",
+        "theirs" => "--theirs",
+        _ => return Err(GitError {
+            message: "Invalid resolution".to_string(),
+            command: "resolve_conflict".to_string(),
+        }),
+    };
+    
+    let output = execute(path, &["checkout", arg, "--", file_path]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("checkout {} -- {}", arg, file_path),
+        });
+    }
+    
+    // After checking out the version, we must add it to mark as resolved
+    execute(path, &["add", file_path]).await?;
+    
     Ok(())
 }
 

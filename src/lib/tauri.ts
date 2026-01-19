@@ -81,6 +81,14 @@ export async function gitCreateBranch(path: string, branch: string): Promise<voi
     return invoke("git_create_branch", { path, branch });
 }
 
+export async function gitUndoCommit(path: string): Promise<void> {
+    return invoke("git_undo_commit", { path });
+}
+
+export async function gitResolveConflict(path: string, filePath: string, resolution: "ours" | "theirs"): Promise<void> {
+    return invoke("git_resolve_conflict", { path, filePath, resolution });
+}
+
 export async function getFileDiff(path: string, filePath: string): Promise<string> {
     return invoke("get_file_diff", { path, filePath });
 }

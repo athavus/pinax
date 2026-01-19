@@ -16,6 +16,8 @@ import {
     gitCommit,
     gitCheckout,
     gitCreateBranch,
+    gitUndoCommit,
+    gitResolveConflict,
     listBranches,
     getFileDiff,
     getGitHistory,
@@ -40,6 +42,9 @@ interface AppState {
     commandPaletteOpen: boolean;
     navigationContext: NavigationContext;
     isLoading: boolean;
+    isFetching: boolean;
+    isPulling: boolean;
+    isPushing: boolean;
     branches: Branch[];
     commits: CommitInfo[];
     error: string | null;
@@ -61,6 +66,8 @@ interface AppState {
     createBranch: (branch: string) => Promise<void>;
     loadBranches: () => Promise<void>;
     loadHistory: () => Promise<void>;
+    undoCommit: () => Promise<void>;
+    resolveConflict: (filePath: string, resolution: "ours" | "theirs") => Promise<void>;
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
@@ -86,6 +93,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     commandPaletteOpen: false,
     navigationContext: "sidebar",
     isLoading: false,
+    isFetching: false,
+    isPulling: false,
+    isPushing: false,
     branches: [],
     commits: [],
     error: null,
@@ -134,8 +144,8 @@ export const useAppStore = create<AppState>((set, get) => ({
             try {
                 const status = await getRepositoryStatus(path);
                 const allBranches = await listBranches(path);
-                // Filter only local branches for the UI as requested
-                const branches = allBranches.filter(b => !b.is_remote && b.name !== "HEAD");
+                // Include both local and remote branches as requested
+                const branches = allBranches.filter(b => b.name !== "HEAD");
                 set({ repositoryStatus: status, branches, isLoading: false });
                 await get().loadHistory();
             } catch (error) {
@@ -169,43 +179,43 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetch: async () => {
         const { selectedRepositoryPath } = get();
         if (!selectedRepositoryPath) return;
-        set({ isLoading: true });
+        set({ isFetching: true, isLoading: true });
         try {
             await gitFetch(selectedRepositoryPath);
             // Refresh status after fetch
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            set({ repositoryStatus: status, isFetching: false, isLoading: false });
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Fetch failed: ${error}`, isLoading: false });
+            set({ error: `Fetch failed: ${error}`, isFetching: false, isLoading: false });
         }
     },
 
     pull: async () => {
         const { selectedRepositoryPath } = get();
         if (!selectedRepositoryPath) return;
-        set({ isLoading: true });
+        set({ isPulling: true, isLoading: true });
         try {
             await gitPull(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            set({ repositoryStatus: status, isPulling: false, isLoading: false });
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Pull failed: ${error}`, isLoading: false });
+            set({ error: `Pull failed: ${error}`, isPulling: false, isLoading: false });
         }
     },
 
     push: async () => {
         const { selectedRepositoryPath } = get();
         if (!selectedRepositoryPath) return;
-        set({ isLoading: true });
+        set({ isPushing: true, isLoading: true });
         try {
             await gitPush(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            set({ repositoryStatus: status, isPushing: false, isLoading: false });
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Push failed: ${error}`, isLoading: false });
+            set({ error: `Push failed: ${error}`, isPushing: false, isLoading: false });
         }
     },
 
@@ -256,10 +266,37 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (!selectedRepositoryPath) return;
         try {
             const allBranches = await listBranches(selectedRepositoryPath);
-            const branches = allBranches.filter(b => !b.is_remote && b.name !== "HEAD");
+            const branches = allBranches.filter(b => b.name !== "HEAD");
             set({ branches });
         } catch (error) {
             console.error("Failed to load branches:", error);
+        }
+    },
+
+    undoCommit: async () => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitUndoCommit(selectedRepositoryPath);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
+        } catch (error) {
+            set({ error: `Undo commit failed: ${error}`, isLoading: false });
+        }
+    },
+
+    resolveConflict: async (filePath: string, resolution: "ours" | "theirs") => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitResolveConflict(selectedRepositoryPath, filePath, resolution);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+        } catch (error) {
+            set({ error: `Conflict resolution failed: ${error}`, isLoading: false });
         }
     },
 

@@ -103,6 +103,16 @@ async fn git_create_branch(path: String, branch: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn git_undo_commit(path: String) -> Result<(), String> {
+    git::undo_commit(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_resolve_conflict(path: String, file_path: String, resolution: String) -> Result<(), String> {
+    git::resolve_conflict(Path::new(&path), &file_path, &resolution).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn get_file_diff(path: String, file_path: String) -> Result<String, String> {
     git::get_file_diff(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
 }
@@ -137,6 +147,8 @@ pub fn run() {
             git_commit,
             git_checkout,
             git_create_branch,
+            git_undo_commit,
+            git_resolve_conflict,
             get_file_diff,
             get_git_history,
             create_github_repository,

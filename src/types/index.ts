@@ -28,6 +28,7 @@ export interface RepositoryStatus {
     staged: FileChange[];
     unstaged: FileChange[];
     untracked: string[];
+    conflicts: FileChange[];
 }
 
 export interface FileChange {
@@ -35,7 +36,7 @@ export interface FileChange {
     status: FileStatus;
 }
 
-export type FileStatus = "added" | "modified" | "deleted" | "renamed" | "copied";
+export type FileStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "conflicted";
 
 export interface Branch {
     name: string;

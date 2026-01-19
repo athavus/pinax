@@ -68,6 +68,16 @@ fn parse_porcelain_status(output: &str, status: &mut RepositoryStatus) {
         let worktree_status = line.chars().nth(1).unwrap_or(' ');
         let path = line[3..].to_string();
 
+        // Check for conflicts first (Unmerged)
+        if index_status == 'U' || worktree_status == 'U' || (index_status == 'A' && worktree_status == 'A') || (index_status == 'D' && worktree_status == 'D') {
+            status.is_clean = false;
+            status.conflicts.push(FileChange {
+                path: path.clone(),
+                status: FileStatus::Conflicted,
+            });
+            continue;
+        }
+
         // Staged changes (index)
         if index_status != ' ' && index_status != '?' {
             if let Some(file_status) = char_to_file_status(index_status) {
@@ -102,6 +112,7 @@ fn char_to_file_status(c: char) -> Option<FileStatus> {
         'D' => Some(FileStatus::Deleted),
         'R' => Some(FileStatus::Renamed),
         'C' => Some(FileStatus::Copied),
+        'U' => Some(FileStatus::Conflicted),
         _ => None,
     }
 }
