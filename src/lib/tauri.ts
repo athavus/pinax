@@ -81,6 +81,10 @@ export async function gitCreateBranch(path: string, branch: string): Promise<voi
     return invoke("git_create_branch", { path, branch });
 }
 
+export async function getFileDiff(path: string, filePath: string): Promise<string> {
+    return invoke("get_file_diff", { path, filePath });
+}
+
 // ============== GitHub Integration ==============
 
 export async function createGithubRepository(

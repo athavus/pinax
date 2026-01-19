@@ -40,8 +40,14 @@ export function CreateRepoDialog() {
             if (!val) resetForm();
         }}>
             <DialogTrigger asChild>
-                <button className="p-1 hover:bg-[hsl(var(--accent))] rounded text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" title="Create Repository on GitHub">
-                    <Github className="w-4 h-4" />
+                <button
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 group border border-primary/20 shadow-sm"
+                    title="Create Repository on GitHub"
+                >
+                    <div className="p-1 rounded bg-foreground/10 group-hover:bg-primary-foreground/20">
+                        <Github className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold">New Repository</span>
                 </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

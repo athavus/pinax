@@ -27,7 +27,7 @@ export function MainLayout({ className }: MainLayoutProps) {
     return (
         <div
             className={cn(
-                "flex h-screen w-screen overflow-hidden p-12 gap-12",
+                "flex h-screen w-screen overflow-hidden p-6 gap-6",
                 "bg-[hsl(var(--background))] text-[hsl(var(--foreground))]",
                 className
             )}

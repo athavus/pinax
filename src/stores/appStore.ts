@@ -4,7 +4,7 @@
  */
 
 import { create } from "zustand";
-import type { Repository, RepositoryStatus, Workspace, NavigationContext } from "@/types";
+import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch } from "@/types";
 import {
     getRepositoryStatus,
     getWorkspaces,
@@ -16,6 +16,8 @@ import {
     gitCommit,
     gitCheckout,
     gitCreateBranch,
+    listBranches,
+    getFileDiff,
     createGithubRepository,
     addRepositoryToWorkspace,
     deleteWorkspace
@@ -30,11 +32,14 @@ interface AppState {
     repositories: Repository[];
     selectedRepositoryPath: string | null;
     repositoryStatus: RepositoryStatus | null;
+    selectedFile: string | null;
+    selectedFileDiff: string | null;
 
     // UI state
     commandPaletteOpen: boolean;
     navigationContext: NavigationContext;
     isLoading: boolean;
+    branches: Branch[];
     error: string | null;
 
     // Actions
@@ -42,6 +47,7 @@ interface AppState {
     createWorkspace: (name: string) => Promise<void>;
     deleteWorkspace: (id: string) => Promise<void>;
     setSelectedRepository: (path: string | null) => void;
+    setSelectedFile: (path: string | null) => Promise<void>;
     addRepositoryToWorkspace: (workspaceId: string, repoPath: string) => Promise<void>;
 
     // Git Operations
@@ -51,6 +57,7 @@ interface AppState {
     commit: (message: string) => Promise<void>;
     checkout: (branch: string) => Promise<void>;
     createBranch: (branch: string) => Promise<void>;
+    loadBranches: () => Promise<void>;
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
@@ -67,13 +74,16 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
     // Initial state
     workspaces: [],
-    selectedWorkspaceId: null,
+    selectedWorkspaceId: "uncategorized",
     repositories: [],
     selectedRepositoryPath: null,
     repositoryStatus: null,
+    selectedFile: null,
+    selectedFileDiff: null,
     commandPaletteOpen: false,
     navigationContext: "sidebar",
     isLoading: false,
+    branches: [],
     error: null,
 
     // Actions
@@ -115,11 +125,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     setSelectedRepository: async (path) => {
-        set({ selectedRepositoryPath: path, isLoading: true });
+        set({ selectedRepositoryPath: path, selectedFile: null, selectedFileDiff: null, isLoading: true });
         if (path) {
             try {
                 const status = await getRepositoryStatus(path);
-                set({ repositoryStatus: status, isLoading: false });
+                const allBranches = await listBranches(path);
+                // Filter only local branches for the UI as requested
+                const branches = allBranches.filter(b => !b.is_remote && b.name !== "HEAD");
+                set({ repositoryStatus: status, branches, isLoading: false });
             } catch (error) {
                 set({
                     error: `Failed to get repository status: ${error}`,
@@ -127,7 +140,23 @@ export const useAppStore = create<AppState>((set, get) => ({
                 });
             }
         } else {
-            set({ repositoryStatus: null, isLoading: false });
+            set({ repositoryStatus: null, branches: [], isLoading: false });
+        }
+    },
+
+    setSelectedFile: async (filePath) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath || !filePath) {
+            set({ selectedFile: null, selectedFileDiff: null });
+            return;
+        }
+
+        set({ selectedFile: filePath, isLoading: true });
+        try {
+            const diff = await getFileDiff(selectedRepositoryPath, filePath);
+            set({ selectedFileDiff: diff, isLoading: false });
+        } catch (error) {
+            set({ error: `Failed to load file diff: ${error}`, isLoading: false });
         }
     },
 
@@ -186,13 +215,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     checkout: async (branch) => {
-        const { selectedRepositoryPath } = get();
+        const { selectedRepositoryPath, loadBranches } = get();
         if (!selectedRepositoryPath) return;
-        set({ isLoading: true });
+        set({ isLoading: true, selectedFile: null, selectedFileDiff: null });
         try {
             await gitCheckout(selectedRepositoryPath, branch);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isLoading: false });
+            await loadBranches();
         } catch (error) {
             set({ error: `Checkout failed: ${error}`, isLoading: false });
         }
@@ -205,9 +235,22 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             await gitCreateBranch(selectedRepositoryPath, branch);
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            const branches = await listBranches(selectedRepositoryPath);
+            set({ repositoryStatus: status, branches, isLoading: false });
         } catch (error) {
             set({ error: `Create branch failed: ${error}`, isLoading: false });
+        }
+    },
+
+    loadBranches: async () => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        try {
+            const allBranches = await listBranches(selectedRepositoryPath);
+            const branches = allBranches.filter(b => !b.is_remote && b.name !== "HEAD");
+            set({ branches });
+        } catch (error) {
+            console.error("Failed to load branches:", error);
         }
     },
 

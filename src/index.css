@@ -1,7 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
 
 :root {
   /* Light Theme (Preserved) */
@@ -24,7 +29,8 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
-  --radius: 0rem;
+  --radius: 0;
+  --font-sans: "Inter", sans-serif;
 
   /* Git Specific */
   --git-added: 142 76% 36%;
@@ -42,103 +48,105 @@
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent: oklch(0.985 0 0 / 0.8);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
 .dark {
-  /* Background: Zinc-950 */
-  --background: 240 10% 3.9%;
-  /* Foreground: Slate-50 */
-  --foreground: 210 40% 98%;
+  /* Soft Deep Space Theme (Slate/Indigo) - Low Contrast */
+  --background: 222 35% 12%;
+  /* Much lighter, less blue saturation */
+  --foreground: 215 20% 90%;
+  /* Softer off-white */
 
-  /* Card: Zinc-900 */
-  --card: 240 5.9% 10%;
-  --card-foreground: 210 40% 98%;
+  --card: 222 35% 15%;
+  --card-foreground: 215 20% 90%;
 
-  /* Popover: Zinc-900 */
-  --popover: 240 5.9% 10%;
-  --popover-foreground: 210 40% 98%;
+  --popover: 222 35% 16%;
+  --popover-foreground: 215 20% 90%;
 
-  /* Primary: White */
-  --primary: 0 0% 100%;
-  --primary-foreground: 240 5.9% 10%;
+  --primary: 239 60% 70%;
+  /* Desaturated, softer Indigo */
+  --primary-foreground: 222 35% 12%;
 
-  /* Secondary: Zinc-800 */
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 222 35% 18%;
+  --secondary-foreground: 215 20% 90%;
 
-  /* Muted: Zinc-800 */
-  --muted: 240 3.7% 15.9%;
-  /* Muted Foreground: Slate-400 */
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 222 35% 16%;
+  --muted-foreground: 215 15% 60%;
+  /* Softer muted text */
 
-  /* Accent: Zinc-800 */
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 239 60% 70% / 0.12;
+  --accent-foreground: 239 60% 70%;
 
-  /* Destructive: Red-900 */
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 60% 65%;
+  --destructive-foreground: 215 20% 98%;
 
-  /* Border: Zinc-800 */
-  --border: 240 3.7% 15.9%;
-  /* Input: Zinc-800 */
-  --input: 240 3.7% 15.9%;
-  /* Ring: Slate-400 */
-  --ring: 215 20.2% 65.1%;
+  --border: 222 35% 22% / 0.4;
+  /* Very subtle borders */
+  --input: 222 35% 18%;
+  --ring: 239 60% 70%;
 
-  /* Sidebar: Zinc-950 */
-  --sidebar: 240 10% 3.9%;
-  --sidebar-foreground: 215 20.2% 65.1%;
-  --sidebar-primary: 0 0% 100%;
-  --sidebar-primary-foreground: 240 5.9% 10%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-ring: 215 20.2% 65.1%;
+  --sidebar: 222 35% 10%;
+  /* Slightly darker than background but still light */
+  --sidebar-foreground: 215 15% 75%;
+  --sidebar-primary: 239 60% 70%;
+  --sidebar-primary-foreground: 215 20% 90%;
+  --sidebar-accent: 239 60% 70% / 0.08;
+  --sidebar-accent-foreground: 239 60% 70%;
+  --sidebar-border: 222 35% 16%;
+  --sidebar-ring: 239 60% 70%;
 
-  --chart-1: 142 70% 50%;
-  --chart-2: 48 96% 53%;
-  --chart-3: 199 89% 48%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --radius: 0.75rem;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
 body {
-  font-family: 'Roboto', 'Inter', -apple-system, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  /* Changed font-family */
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   overflow: hidden;
   user-select: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: hsla(var(--card) / 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid hsla(var(--border) / 0.3);
+}
+
+.glass-dark {
+  background: hsla(var(--background) / 0.6);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid hsla(var(--border) / 0.2);
 }
 
 /* Material Design Elevation */
 .elevation-1 {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .elevation-2 {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .elevation-3 {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -146,19 +154,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
+  background: hsla(var(--muted-foreground) / 0.3);
   border-radius: 99px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: hsla(var(--muted-foreground) / 0.5);
 }
 
 /* Focus ring */
 :focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 :focus:not(:focus-visible) {

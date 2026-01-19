@@ -36,6 +36,7 @@ pub async fn execute(repo_path: &Path, args: &[&str]) -> GitResult<Output> {
     let output = Command::new("git")
         .args(args)
         .current_dir(repo_path)
+        .env("GIT_TERMINAL_PROMPT", "0")
         .output()
         .await
         .map_err(|e| GitError {

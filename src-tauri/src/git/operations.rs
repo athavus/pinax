@@ -19,8 +19,11 @@ pub async fn push(path: &Path) -> GitResult<()> {
     Ok(())
 }
 
-/// Commit staged changes
+/// Stage all and commit changes
 pub async fn commit(path: &Path, message: &str) -> GitResult<()> {
+    // Stage all changes first
+    execute(path, &["add", "-A"]).await?;
+    // Then commit
     execute(path, &["commit", "-m", message]).await?;
     Ok(())
 }
@@ -35,4 +38,16 @@ pub async fn checkout(path: &Path, branch_name: &str) -> GitResult<()> {
 pub async fn create_branch(path: &Path, branch_name: &str) -> GitResult<()> {
     execute(path, &["checkout", "-b", branch_name]).await?;
     Ok(())
+}
+
+/// Get the diff of a specific file
+pub async fn get_file_diff(path: &Path, file_path: &str) -> GitResult<String> {
+    // Check if staged or unstaged
+    // For simplicity, we'll try unstaged first, then staged if empty
+    let unstaged = execute_string(path, &["diff", "--no-color", "--", file_path]).await?;
+    if !unstaged.is_empty() {
+        return Ok(unstaged);
+    }
+    
+    execute_string(path, &["diff", "--cached", "--no-color", "--", file_path]).await
 }

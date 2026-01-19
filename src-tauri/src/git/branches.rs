@@ -9,7 +9,7 @@ use super::types::Branch;
 
 /// List all branches in a repository
 pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
-    let output = execute_string(repo_path, &["branch", "-a", "--format=%(refname:short)\t%(HEAD)\t%(upstream:short)"]).await?;
+    let output = execute_string(repo_path, &["branch", "-a", "--format=%(refname)\t%(HEAD)\t%(upstream:short)"]).await?;
 
     let mut branches = Vec::new();
 
@@ -19,7 +19,7 @@ pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
             continue;
         }
 
-        let name = parts[0].to_string();
+        let refname = parts[0].to_string();
         let is_current = parts.get(1).map(|s| *s == "*").unwrap_or(false);
         let upstream = parts.get(2).and_then(|s| {
             if s.is_empty() {
@@ -29,7 +29,22 @@ pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
             }
         });
 
-        let is_remote = name.starts_with("remotes/") || name.starts_with("origin/");
+        // refs/heads/master or refs/remotes/origin/master
+        let is_remote = refname.starts_with("refs/remotes/");
+        
+        // Extract short name for display
+        let name = if refname.starts_with("refs/heads/") {
+            refname.trim_start_matches("refs/heads/").to_string()
+        } else if refname.starts_with("refs/remotes/") {
+            refname.trim_start_matches("refs/remotes/").to_string()
+        } else {
+            refname.clone()
+        };
+
+        // Filter out HEAD symrefs (e.g. origin/HEAD)
+        if name.ends_with("/HEAD") {
+            continue;
+        }
 
         branches.push(Branch {
             name,

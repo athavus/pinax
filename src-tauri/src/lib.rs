@@ -94,6 +94,11 @@ async fn git_create_branch(path: String, branch: String) -> Result<(), String> {
     git::create_branch(Path::new(&path), &branch).await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn get_file_diff(path: String, file_path: String) -> Result<String, String> {
+    git::get_file_diff(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
+}
+
 // ============== GitHub Commands ==============
 
 #[tauri::command]
@@ -125,6 +130,7 @@ pub fn run() {
             git_commit,
             git_checkout,
             git_create_branch,
+            get_file_diff,
             create_github_repository,
         ])
         .run(tauri::generate_context!())

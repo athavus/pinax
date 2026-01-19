@@ -5,11 +5,11 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
-import { FolderGit2, ChevronRight, FolderOpen } from "lucide-react";
-import type { Repository } from "@/types";
-import { WorkspaceList } from "@/components/workspace";
+import { FolderGit2, Check } from "lucide-react";
+import { Repository } from "@/types";
+import { WorkspaceSelect } from "@/components/workspace";
 import { useWorkspaceRepositories } from "@/hooks/useWorkspaceRepositories";
-import { CreateRepoDialog } from "@/components/github";
+import { homeDir } from "@tauri-apps/api/path";
 
 import { useDraggable, DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 
@@ -74,11 +74,18 @@ export function Sidebar() {
         };
     }, [navigationContext, focusedIndex, repositories, setSelectedRepository]);
 
-    // Scan for repos on mount - path will be configurable in the future
+    // Scan for repos on mount
     useEffect(() => {
-        // TODO: Get actual home directory from Tauri backend
-        const homeDir = "/home";
-        scanForRepositories(homeDir);
+        const initScan = async () => {
+            try {
+                const home = await homeDir();
+                scanForRepositories(home);
+            } catch (err) {
+                console.error("Failed to get home dir:", err);
+                scanForRepositories("/home"); // Fallback
+            }
+        };
+        initScan();
     }, [scanForRepositories]);
 
     return (
@@ -88,57 +95,63 @@ export function Sidebar() {
                 tabIndex={0}
                 onFocus={() => setNavigationContext("sidebar")}
                 className={cn(
-                    "w-72 min-w-72 h-full flex flex-col bg-card rounded-xl shadow-sm",
-                    "outline-none focus:ring-2 ring-primary/20 transition-shadow"
+                    "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border",
+                    "outline-none transition-all duration-300 rounded-2xl overflow-hidden m-4 shadow-2xl"
                 )}
             >
-                {/* Header */}
-                <header className="flex items-center gap-3 px-8 py-6 border-b border-border/50">
-                    <FolderGit2 className="w-5 h-5 text-primary" />
-                    <h1 className="font-semibold text-lg tracking-tight">Pinax</h1>
+                {/* Header with high impact */}
+                <header className="flex flex-col gap-6 px-8 py-14">
+                    <div className="flex items-center gap-5">
+                        <div className="p-4 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_32px_rgba(var(--primary),0.3)] animate-pulse-slow">
+                            <FolderGit2 className="w-8 h-8 font-black" />
+                        </div>
+                        <div className="flex flex-col">
+                            <h1 className="font-black text-5xl tracking-tighter text-foreground leading-none">Pinax</h1>
+                            <span className="text-xs font-black uppercase tracking-[0.5em] text-primary mt-4 opacity-100">Workbench</span>
+                        </div>
+                    </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto py-4">
-                    <div className="px-4 mb-6">
-                        <WorkspaceList />
-                    </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-hide">
+                    <WorkspaceSelect />
 
                     {/* Repositories */}
-                    <div className="px-4">
-                        <div className="flex items-center justify-between px-2 mb-3">
-                            <h2 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
+                    <div className="px-0">
+                        <div className="px-8 mb-6 flex items-center justify-between">
+                            <h2 className="text-[11px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">
                                 Repositories
                             </h2>
-                            <CreateRepoDialog />
+                            <span className="text-[10px] font-black text-primary/40 px-2 py-0.5 bg-primary/5 rounded-full">
+                                {repositories.length}
+                            </span>
                         </div>
 
-                        {repositories.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-8 text-[hsl(var(--muted-foreground))]">
-                                <FolderOpen className="w-10 h-10 mb-2 opacity-50" />
-                                <p className="text-sm">No repositories found</p>
-                                <p className="text-xs mt-1">Press ⌘P to scan a directory</p>
-                            </div>
-                        ) : (
-                            <ul className="space-y-1">
-                                {repositories.map((repo, index) => (
+                        <div className="flex flex-col gap-1">
+                            {repositories.length > 0 ? (
+                                repositories.map((repo) => (
                                     <RepositoryItem
                                         key={repo.path}
                                         repository={repo}
                                         isSelected={selectedRepositoryPath === repo.path}
-                                        isFocused={navigationContext === "sidebar" && focusedIndex === index}
+                                        isFocused={false}
                                         onClick={() => setSelectedRepository(repo.path)}
                                     />
-                                ))}
-                            </ul>
-                        )}
+                                ))
+                            ) : (
+                                <div className="px-8 py-10 text-center">
+                                    <p className="text-xs text-muted-foreground/30 font-bold italic">No repositories in this workspace</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <footer className="px-4 py-3 border-t border-[hsl(var(--border))]">
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                        {repositories.length} repositories
-                    </p>
+                {/* Footer with more depth */}
+                <footer className="px-8 py-8 border-t border-sidebar-border bg-card/40 backdrop-blur-md flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
+                        {repositories.length} PROJECTS
+                    </span>
+                    <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_12px_rgba(var(--primary),0.4)]" />
                 </footer>
             </aside>
         </DndContext>
@@ -170,27 +183,33 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
 
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50,
     } : undefined;
 
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
-                <li ref={setNodeRef} style={style} {...listeners} {...attributes}>
+                <li ref={setNodeRef} style={style} {...listeners} {...attributes} className="relative">
                     <button
                         onClick={onClick}
                         className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-left outline-none",
-                            "transition-all duration-200",
+                            "w-full flex items-center gap-5 px-8 py-5 text-left outline-none transition-all duration-300 border-l-4",
                             isSelected
-                                ? "bg-accent text-accent-foreground font-medium shadow-sm translate-x-1"
-                                : isFocused
-                                    ? "bg-muted"
-                                    : "hover:bg-muted/80 text-muted-foreground hover:text-foreground hover:translate-x-0.5"
+                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-2xl"
+                                : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30",
+                            isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20"
                         )}
                     >
-                        <FolderGit2 className="w-4 h-4 shrink-0 opacity-70" />
-                        <span className="text-sm truncate font-medium">{repository.name}</span>
-                        {isSelected && <ChevronRight className="w-4 h-4 ml-auto shrink-0 opacity-50" />}
+                        <FolderGit2 className={cn(
+                            "w-5 h-5 transition-all",
+                            isSelected ? "opacity-100 scale-110" : "opacity-30"
+                        )} />
+                        <span className="text-sm truncate tracking-tight font-bold">{repository.name}</span>
+                        {isSelected && (
+                            <div className="ml-auto animate-in zoom-in-50 duration-500">
+                                <Check className="w-5 h-5 text-primary-foreground" />
+                            </div>
+                        )}
                     </button>
                 </li>
             </ContextMenuTrigger>
