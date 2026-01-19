@@ -18,6 +18,8 @@ import {
     gitCreateBranch,
     gitUndoCommit,
     gitResolveConflict,
+    gitDiscardChanges,
+    gitAddToGitignore,
     listBranches,
     getFileDiff,
     getGitHistory,
@@ -68,6 +70,8 @@ interface AppState {
     loadHistory: () => Promise<void>;
     undoCommit: () => Promise<void>;
     resolveConflict: (filePath: string, resolution: "ours" | "theirs") => Promise<void>;
+    discardChanges: (filePath: string) => Promise<void>;
+    addToGitignore: (filePath: string) => Promise<void>;
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
@@ -297,6 +301,33 @@ export const useAppStore = create<AppState>((set, get) => ({
             set({ repositoryStatus: status, isLoading: false });
         } catch (error) {
             set({ error: `Conflict resolution failed: ${error}`, isLoading: false });
+        }
+    },
+
+    discardChanges: async (filePath: string) => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitDiscardChanges(selectedRepositoryPath, filePath);
+            if (get().selectedFile === filePath) {
+                set({ selectedFile: null, selectedFileDiff: null });
+            }
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Discard failed: ${error}`, isLoading: false });
+        }
+    },
+
+    addToGitignore: async (filePath: string) => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitAddToGitignore(selectedRepositoryPath, filePath);
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Add to gitignore failed: ${error}`, isLoading: false });
         }
     },
 

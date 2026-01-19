@@ -97,6 +97,14 @@ export async function getGitHistory(path: string): Promise<CommitInfo[]> {
     return invoke<CommitInfo[]>("get_git_history", { path });
 }
 
+export async function gitDiscardChanges(path: string, filePath: string): Promise<void> {
+    return invoke("git_discard_changes", { path, filePath });
+}
+
+export async function gitAddToGitignore(path: string, filePath: string): Promise<void> {
+    return invoke("git_add_to_gitignore", { path, filePath });
+}
+
 // ============== GitHub Integration ==============
 
 export async function createGithubRepository(

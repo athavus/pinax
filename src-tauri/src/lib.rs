@@ -117,6 +117,16 @@ async fn get_file_diff(path: String, file_path: String) -> Result<String, String
     git::get_file_diff(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn git_discard_changes(path: String, file_path: String) -> Result<(), String> {
+    git::discard_changes(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_add_to_gitignore(path: String, file_path: String) -> Result<(), String> {
+    git::add_to_gitignore(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
+}
+
 // ============== GitHub Commands ==============
 
 #[tauri::command]
@@ -150,6 +160,8 @@ pub fn run() {
             git_undo_commit,
             git_resolve_conflict,
             get_file_diff,
+            git_discard_changes,
+            git_add_to_gitignore,
             get_git_history,
             create_github_repository,
         ])

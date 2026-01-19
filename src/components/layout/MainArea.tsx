@@ -12,9 +12,21 @@ import {
     RefreshCw,
     Upload,
     ArrowDown,
-    ChevronDown
+    ChevronDown,
+    Trash2,
+    EyeOff
 } from "lucide-react";
 import { WelcomeView } from "./WelcomeView";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuPortal,
+    ContextMenuSub,
+    ContextMenuSubContent,
+    ContextMenuSubTrigger,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 export function MainArea() {
     const {
@@ -39,6 +51,8 @@ export function MainArea() {
         clearError,
         undoCommit,
         resolveConflict,
+        discardChanges,
+        addToGitignore,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -305,10 +319,10 @@ export function MainArea() {
                             <div className="p-3 space-y-6">
                                 {repositoryStatus && (
                                     <>
-                                        <FileList title="Conflicts" files={repositoryStatus.conflicts} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
-                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
-                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
-                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} />
+                                        <FileList title="Conflicts" files={repositoryStatus.conflicts} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
+                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
+                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
+                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
 
                                         {repositoryStatus.staged.length === 0 &&
                                             repositoryStatus.unstaged.length === 0 &&
@@ -343,19 +357,21 @@ export function MainArea() {
                                                 key={commit.hash}
                                                 className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-none transition-all group border border-transparent hover:border-border/10 relative"
                                             >
-                                                {index === 0 && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            undoCommit();
-                                                        }}
-                                                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest border border-destructive/20 hover:bg-destructive/20 rounded-none shadow-sm"
-                                                    >
-                                                        Undo
-                                                    </button>
-                                                )}
                                                 <div className="flex items-center justify-between gap-4">
-                                                    <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                        {index === 0 && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    undoCommit();
+                                                                }}
+                                                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 bg-destructive/10 text-destructive text-[9px] font-black uppercase tracking-widest border border-destructive/20 hover:bg-destructive/20 rounded-none"
+                                                            >
+                                                                Undo
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                     <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
                                                 </div>
                                                 <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
@@ -580,11 +596,15 @@ function FileList({
     files,
     onFileSelect,
     selectedFile,
+    discardChanges,
+    addToGitignore,
 }: {
     title: string;
     files: any[];
     onFileSelect: (path: string) => void;
     selectedFile: string | null;
+    discardChanges: (path: string) => void;
+    addToGitignore: (path: string) => void;
 }) {
     if (files.length === 0) return null;
 
@@ -592,38 +612,80 @@ function FileList({
         <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-300">
             <h3 className="text-[11px] font-black uppercase text-muted-foreground/40 tracking-[0.2em] px-2 mb-3">{title}</h3>
             <div className="space-y-1.5">
-                {files.map((file) => (
-                    <button
-                        key={file.path}
-                        onClick={() => onFileSelect(file.path)}
-                        className={cn(
-                            "w-full flex items-center gap-4 px-4 py-3 transition-all text-left group border border-transparent rounded-none",
-                            selectedFile === file.path
-                                ? "bg-primary/20 border-primary/30 text-primary shadow-lg shadow-primary/5"
-                                : "hover:bg-primary/10 text-muted-foreground/80 hover:text-foreground"
-                        )}
-                    >
-                        <div className={cn(
-                            "w-2 h-2 rounded-full shrink-0 shadow-sm",
-                            file.status === "added" || file.status === "untracked" ? "bg-[hsl(var(--git-added))]" :
-                                file.status === "modified" ? "bg-[hsl(var(--git-modified))]" :
-                                    file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" :
-                                        file.status === "conflicted" ? "bg-destructive animate-pulse" : "bg-muted-foreground"
-                        )} />
-                        <span className="text-sm font-bold truncate flex-1">{file.path}</span>
-                        {file.status && (
-                            <span className={cn(
-                                "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity",
-                                file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
-                                    file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
-                                        file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :
-                                            file.status === "conflicted" ? "text-destructive" : ""
-                            )}>
-                                {file.status}
-                            </span>
-                        )}
-                    </button>
-                ))}
+                {files.map((file) => {
+                    const pathSegments = file.path.split('/');
+                    const ignoreOptions = pathSegments.reduce((acc: string[], _segment: string, idx: number) => {
+                        const currentPath = pathSegments.slice(0, idx + 1).join('/');
+                        const pattern = idx === pathSegments.length - 1 ? currentPath : `${currentPath}/`;
+                        acc.push(pattern);
+                        return acc;
+                    }, []).reverse();
+
+                    return (
+                        <ContextMenu key={file.path}>
+                            <ContextMenuTrigger asChild>
+                                <button
+                                    onClick={() => onFileSelect(file.path)}
+                                    className={cn(
+                                        "w-full flex items-center gap-4 px-4 py-3 transition-all text-left group border border-transparent rounded-none",
+                                        selectedFile === file.path
+                                            ? "bg-primary/20 border-primary/30 text-primary shadow-lg shadow-primary/5"
+                                            : "hover:bg-primary/10 text-muted-foreground/80 hover:text-foreground"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full shrink-0 shadow-sm",
+                                        file.status === "added" || file.status === "untracked" ? "bg-[hsl(var(--git-added))]" :
+                                            file.status === "modified" ? "bg-[hsl(var(--git-modified))]" :
+                                                file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" :
+                                                    file.status === "conflicted" ? "bg-destructive animate-pulse" : "bg-muted-foreground"
+                                    )} />
+                                    <span className="text-sm font-bold truncate flex-1">{file.path}</span>
+                                    {file.status && (
+                                        <span className={cn(
+                                            "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity",
+                                            file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
+                                                file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
+                                                    file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :
+                                                        file.status === "conflicted" ? "text-destructive" : ""
+                                        )}>
+                                            {file.status}
+                                        </span>
+                                    )}
+                                </button>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                                <ContextMenuItem
+                                    onClick={() => discardChanges(file.path)}
+                                    className="flex items-center gap-3 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/10 cursor-pointer"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Discard Changes
+                                </ContextMenuItem>
+
+                                <ContextMenuSub>
+                                    <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer">
+                                        <EyeOff className="w-3.5 h-3.5" />
+                                        Add to .gitignore
+                                    </ContextMenuSubTrigger>
+                                    <ContextMenuPortal>
+                                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                                            {ignoreOptions.map((option: string) => (
+                                                <ContextMenuItem
+                                                    key={option}
+                                                    onClick={() => addToGitignore(option)}
+                                                    className="py-2.5 text-xs font-mono font-bold cursor-pointer truncate px-4"
+                                                >
+                                                    {option}
+                                                </ContextMenuItem>
+                                            ))}
+                                        </ContextMenuSubContent>
+                                    </ContextMenuPortal>
+                                </ContextMenuSub>
+                            </ContextMenuContent>
+                        </ContextMenu>
+                    );
+                })}
             </div>
         </div>
     );

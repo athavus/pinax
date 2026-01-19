@@ -139,3 +139,38 @@ pub async fn get_file_diff(path: &Path, file_path: &str) -> GitResult<String> {
     
     execute_string(path, &["diff", "--cached", "--no-color", "--", file_path]).await
 }
+
+/// Discard changes in a file
+pub async fn discard_changes(path: &Path, file_path: &str) -> GitResult<()> {
+    // Try to restore if it's tracked (staged or unstaged)
+    let _ = execute(path, &["restore", "--staged", "--worktree", "--", file_path]).await;
+    let _ = execute(path, &["restore", "--", file_path]).await;
+    
+    // Also try to clean if it's untracked
+    let _ = execute(path, &["clean", "-f", "--", file_path]).await;
+    
+    Ok(())
+}
+
+/// Add a file pattern to .gitignore
+pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
+    use std::fs::OpenOptions;
+    use std::io::Write;
+    
+    let gitignore_path = path.join(".gitignore");
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(gitignore_path)
+        .map_err(|e| GitError {
+            message: e.to_string(),
+            command: "open .gitignore".to_string(),
+        })?;
+        
+    writeln!(file, "{}", file_path).map_err(|e| GitError {
+        message: e.to_string(),
+        command: "write to .gitignore".to_string(),
+    })?;
+    
+    Ok(())
+}
