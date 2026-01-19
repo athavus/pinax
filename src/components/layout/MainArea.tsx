@@ -32,6 +32,8 @@ export function MainArea() {
         commit,
         checkout,
         setSelectedFile,
+        error,
+        clearError,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -73,7 +75,25 @@ export function MainArea() {
     }
 
     return (
-        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/20 rounded-3xl m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500">
+        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/20 rounded-3xl m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
+            {/* Global Error Notification */}
+            {error && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-500">
+                    <div className="bg-destructive/10 backdrop-blur-xl border border-destructive/20 px-6 py-3 rounded-2xl flex items-center gap-4 shadow-2xl">
+                        <div className="p-2 rounded-lg bg-destructive/20 text-destructive">
+                            <RefreshCw className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-bold text-destructive/90">{error}</span>
+                        <button
+                            onClick={clearError}
+                            className="ml-2 p-1 hover:bg-destructive/20 rounded-md transition-colors text-destructive"
+                        >
+                            <Check className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header with Glassmorphism */}
             <header className="flex flex-col border-b border-border/20 bg-card/40 backdrop-blur-md">
                 <div className="flex items-center h-16 px-6 gap-6">
@@ -228,10 +248,13 @@ export function MainArea() {
                         <button
                             onClick={push}
                             disabled={isLoading}
-                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
+                            className={cn(
+                                "flex items-center gap-3 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border active:scale-[0.98] disabled:opacity-50",
+                                isLoading ? "bg-primary/5 text-primary/40 border-primary/5" : "bg-primary/10 text-primary border-primary/5 hover:bg-primary/20"
+                            )}
                         >
-                            <Upload className="w-3.5 h-3.5" />
-                            Push
+                            <Upload className={cn("w-3.5 h-3.5", isLoading && "animate-pulse")} />
+                            {isLoading ? "Pushing..." : "Push"}
                         </button>
                     </div>
                 </div>
@@ -297,22 +320,34 @@ export function MainArea() {
                         ) : (
                             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
                                 {commits.length > 0 ? (
-                                    commits.map((commit) => (
-                                        <div
-                                            key={commit.hash}
-                                            className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-2xl transition-all group border border-transparent hover:border-border/10"
-                                        >
-                                            <div className="flex items-center justify-between gap-4">
-                                                <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
-                                                <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{new Date(commit.timestamp).toLocaleDateString()}</span>
+                                    commits.map((commit) => {
+                                        let dateStr = "Unknown Date";
+                                        try {
+                                            const d = new Date(commit.timestamp);
+                                            if (!isNaN(d.getTime())) {
+                                                dateStr = d.toLocaleDateString();
+                                            }
+                                        } catch (e) {
+                                            console.error("Date parsing error:", e);
+                                        }
+
+                                        return (
+                                            <div
+                                                key={commit.hash}
+                                                className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-2xl transition-all group border border-transparent hover:border-border/10"
+                                            >
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                    <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
+                                                </div>
+                                                <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1 h-1 rounded-full bg-primary/20" />
+                                                    <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
+                                                </div>
                                             </div>
-                                            <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1 h-1 rounded-full bg-primary/20" />
-                                                <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
-                                            </div>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 ) : (
                                     <div className="p-8 text-center text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black py-32">
                                         No commit history found

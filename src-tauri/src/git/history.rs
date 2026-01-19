@@ -11,7 +11,7 @@ pub async fn get_history(repo_path: &Path) -> GitResult<Vec<CommitInfo>> {
         &[
             "log", 
             "-n", "50", 
-            "--date=iso", 
+            "--date=iso-strict", 
             &format!("--format={}", format)
         ]
     ).await?;

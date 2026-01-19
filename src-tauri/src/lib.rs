@@ -129,7 +129,6 @@ pub fn run() {
             list_branches,
             get_workspaces,
             create_workspace,
-            create_workspace,
             delete_workspace,
             add_repository_to_workspace,
             git_fetch,
