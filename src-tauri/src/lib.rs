@@ -38,6 +38,14 @@ async fn list_branches(path: String) -> Result<Vec<Branch>, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Get commit history
+#[tauri::command]
+async fn get_git_history(path: String) -> Result<Vec<git::CommitInfo>, String> {
+    git::get_history(Path::new(&path))
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Get all workspaces
 #[tauri::command]
 async fn get_workspaces() -> Result<Vec<Workspace>, String> {
@@ -131,6 +139,7 @@ pub fn run() {
             git_checkout,
             git_create_branch,
             get_file_diff,
+            get_git_history,
             create_github_repository,
         ])
         .run(tauri::generate_context!())

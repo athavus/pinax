@@ -4,7 +4,7 @@
  */
 
 import { invoke } from "@tauri-apps/api/core";
-import type { Repository, RepositoryStatus, Branch, Workspace, GitHubRepo } from "@/types";
+import type { Repository, RepositoryStatus, Branch, Workspace, GitHubRepo, CommitInfo } from "@/types";
 
 /**
  * Scan a directory recursively to find Git repositories
@@ -83,6 +83,10 @@ export async function gitCreateBranch(path: string, branch: string): Promise<voi
 
 export async function getFileDiff(path: string, filePath: string): Promise<string> {
     return invoke("get_file_diff", { path, filePath });
+}
+
+export async function getGitHistory(path: string): Promise<CommitInfo[]> {
+    return invoke<CommitInfo[]>("get_git_history", { path });
 }
 
 // ============== GitHub Integration ==============

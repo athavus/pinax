@@ -4,7 +4,7 @@
  */
 
 import { create } from "zustand";
-import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch } from "@/types";
+import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch, CommitInfo } from "@/types";
 import {
     getRepositoryStatus,
     getWorkspaces,
@@ -18,6 +18,7 @@ import {
     gitCreateBranch,
     listBranches,
     getFileDiff,
+    getGitHistory,
     createGithubRepository,
     addRepositoryToWorkspace,
     deleteWorkspace
@@ -40,6 +41,7 @@ interface AppState {
     navigationContext: NavigationContext;
     isLoading: boolean;
     branches: Branch[];
+    commits: CommitInfo[];
     error: string | null;
 
     // Actions
@@ -58,6 +60,7 @@ interface AppState {
     checkout: (branch: string) => Promise<void>;
     createBranch: (branch: string) => Promise<void>;
     loadBranches: () => Promise<void>;
+    loadHistory: () => Promise<void>;
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
@@ -84,6 +87,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     navigationContext: "sidebar",
     isLoading: false,
     branches: [],
+    commits: [],
     error: null,
 
     // Actions
@@ -133,6 +137,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 // Filter only local branches for the UI as requested
                 const branches = allBranches.filter(b => !b.is_remote && b.name !== "HEAD");
                 set({ repositoryStatus: status, branches, isLoading: false });
+                await get().loadHistory();
             } catch (error) {
                 set({
                     error: `Failed to get repository status: ${error}`,
@@ -170,6 +175,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             // Refresh status after fetch
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
         } catch (error) {
             set({ error: `Fetch failed: ${error}`, isLoading: false });
         }
@@ -183,6 +189,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPull(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
         } catch (error) {
             set({ error: `Pull failed: ${error}`, isLoading: false });
         }
@@ -196,6 +203,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPush(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
         } catch (error) {
             set({ error: `Push failed: ${error}`, isLoading: false });
         }
@@ -209,6 +217,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitCommit(selectedRepositoryPath, message);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
         } catch (error) {
             set({ error: `Commit failed: ${error}`, isLoading: false });
         }
@@ -331,6 +340,17 @@ export const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             // Silent error failure for polling to avoid pestering user
             console.error("Polling failed:", error);
+        }
+    },
+
+    loadHistory: async () => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        try {
+            const commits = await getGitHistory(selectedRepositoryPath);
+            set({ commits });
+        } catch (error) {
+            console.error("Failed to load history:", error);
         }
     },
 

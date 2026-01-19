@@ -23,6 +23,7 @@ export function MainArea() {
         repositories,
         isLoading,
         branches,
+        commits,
         selectedFile,
         selectedFileDiff,
         fetch,
@@ -206,29 +207,31 @@ export function MainArea() {
 
                     <div className="w-px h-6 bg-border/20" />
 
-                    {/* Fetch/Push/Pull */}
-                    <div className="flex items-center gap-2 ml-auto">
+                    {/* Git Actions */}
+                    <div className="flex items-center gap-3 ml-auto">
                         <button
                             onClick={fetch}
-                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-primary/10 hover:text-primary rounded-sm transition-all text-[10px] font-black uppercase tracking-widest text-muted-foreground/60"
+                            disabled={isLoading}
+                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
                         >
-                            <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
-                            <span>Fetch</span>
+                            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+                            Fetch
                         </button>
-                        <div className="w-px h-3.5 bg-border/20 mx-1" />
                         <button
                             onClick={pull}
-                            className="p-1.5 hover:bg-primary/10 hover:text-primary rounded-sm transition-all text-muted-foreground/60"
-                            title="Pull"
+                            disabled={isLoading}
+                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
                         >
                             <ArrowDown className="w-3.5 h-3.5" />
+                            Pull
                         </button>
                         <button
                             onClick={push}
-                            className="p-1.5 hover:bg-primary/10 hover:text-primary rounded-sm transition-all text-muted-foreground/60"
-                            title="Push"
+                            disabled={isLoading}
+                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50"
                         >
                             <Upload className="w-3.5 h-3.5" />
+                            Push
                         </button>
                     </div>
                 </div>
@@ -292,8 +295,29 @@ export function MainArea() {
                                 )}
                             </div>
                         ) : (
-                            <div className="p-8 text-center text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black py-32">
-                                History view coming soon...
+                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+                                {commits.length > 0 ? (
+                                    commits.map((commit) => (
+                                        <div
+                                            key={commit.hash}
+                                            className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-2xl transition-all group border border-transparent hover:border-border/10"
+                                        >
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{new Date(commit.timestamp).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1 h-1 rounded-full bg-primary/20" />
+                                                <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black py-32">
+                                        No commit history found
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
