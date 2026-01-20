@@ -21,7 +21,6 @@ import {
     gitDiscardChanges,
     gitAddToGitignore,
     listBranches,
-    getFileDiff,
     getGitHistory,
     createGithubRepository,
     addRepositoryToWorkspace,
@@ -218,7 +217,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         set({ selectedFile: filePath, isLoading: true });
         try {
-            const diff = await getFileDiff(selectedRepositoryPath, filePath);
+            const { getFileDiff, getCommitFileDiff } = await import("@/lib/tauri");
+
+            let diff;
+            if (get().selectedCommitHash) {
+                diff = await getCommitFileDiff(selectedRepositoryPath, get().selectedCommitHash!, filePath);
+            } else {
+                diff = await getFileDiff(selectedRepositoryPath, filePath);
+            }
+
             set({ selectedFileDiff: diff, isLoading: false });
         } catch (error) {
             set({ error: `Failed to load file diff: ${error}`, isLoading: false });

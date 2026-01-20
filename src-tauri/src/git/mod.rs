@@ -12,6 +12,6 @@ pub mod history;
 pub use branches::list_branches;
 pub use executor::is_git_repo;
 pub use status::get_status;
-pub use history::{get_history, get_commit_files};
+pub use history::{get_history, get_commit_files, get_commit_file_diff};
 pub use types::*;
 pub use operations::*;

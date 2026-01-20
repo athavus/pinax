@@ -21,7 +21,8 @@ import {
     History,
     GitBranchPlus,
     GitCommitVertical,
-    ExternalLink
+    ExternalLink,
+    Zap,
 } from "lucide-react";
 import { md5 } from "@/lib/md5";
 import { WelcomeView } from "./WelcomeView";
@@ -366,43 +367,43 @@ export function MainArea() {
                         </button>
                     </div>
                 </div>
-
-                {/* Commit List / Changes Toggle */}
-                <div className="border-b border-border/5 flex items-center">
-                    <button
-                        onClick={() => setActiveTab("changes")}
-                        className={cn(
-                            "px-6 py-3 text-[10px] uppercase font-bold tracking-widest border-b-2 transition-colors",
-                            activeTab === "changes"
-                                ? "border-primary text-foreground"
-                                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:bg-white/5"
-                        )}
-                    >
-                        Changes
-                        {repositoryStatus && (repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length) > 0 && (
-                            <span className="ml-2 text-primary font-bold px-2 py-0.5 bg-primary/20 rounded-full text-[10px]">
-                                {repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("history")}
-                        className={cn(
-                            "px-6 py-3 text-[10px] uppercase font-bold tracking-widest border-b-2 transition-colors",
-                            activeTab === "history"
-                                ? "border-primary text-foreground"
-                                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:bg-white/5"
-                        )}
-                    >
-                        History
-                    </button>
-                </div>
             </header>
 
             {/* Main Content Area: Split View */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Left Column: File List & Commit */}
                 <div className="w-80 border-r border-border/10 flex flex-col bg-card">
+                    {/* Integrated Tabs */}
+                    <div className="flex border-b border-border/5 bg-background/50">
+                        <button
+                            onClick={() => setActiveTab("changes")}
+                            className={cn(
+                                "flex-1 px-4 h-14 text-[10px] uppercase font-black tracking-[0.2em] border-b-2 transition-all",
+                                activeTab === "changes"
+                                    ? "border-primary text-primary bg-primary/5"
+                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/2"
+                            )}
+                        >
+                            Changes
+                            {repositoryStatus && (repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length) > 0 && (
+                                <span className="ml-2 px-1.5 py-0.5 bg-primary/20 text-primary rounded-full text-[9px] font-black">
+                                    {repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("history")}
+                            className={cn(
+                                "flex-1 px-4 h-14 text-[10px] uppercase font-black tracking-[0.2em] border-b-2 transition-all",
+                                activeTab === "history"
+                                    ? "border-primary text-primary bg-primary/5"
+                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/2"
+                            )}
+                        >
+                            History
+                        </button>
+                    </div>
+
                     <div className="flex-1 overflow-y-auto">
                         {isLoading && !selectedFile ? (
                             <div className="p-8 text-center text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black py-20">Loading...</div>
@@ -456,7 +457,7 @@ export function MainArea() {
                                                     >
                                                         <div className="flex items-center justify-between gap-4">
                                                             <div className="flex items-center gap-3">
-                                                                <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                                <span className="text-[9px] font-mono font-black text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">{commit.short_hash}</span>
                                                                 {index === 0 && (
                                                                     <button
                                                                         onClick={(e) => {
@@ -471,7 +472,7 @@ export function MainArea() {
                                                             </div>
                                                             <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-tighter shrink-0">{dateStr}</span>
                                                         </div>
-                                                        <p className="text-sm font-bold text-foreground leading-relaxed truncate">{commit.message}</p>
+                                                        <p className="text-xs font-mono text-foreground/90 leading-tight truncate">{commit.message}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <img
                                                                 src={getAvatarUrl(commit.hash, commit.email)}
@@ -601,9 +602,9 @@ export function MainArea() {
                 {/* Optional middle column for commit details (files list) */}
                 {activeTab === "history" && selectedCommitHash && (
                     <div className="w-64 border-r border-border/10 flex flex-col bg-card/60 animate-in slide-in-from-left duration-300">
-                        <div className="h-14 flex items-center px-6 border-b border-border/10">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-                                {selectedCommitFiles.length} Changed Files
+                        <div className="h-14 flex items-center px-6 border-b border-border/5 bg-background/20">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
+                                {selectedCommitFiles.length} files changed
                             </span>
                         </div>
                         <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
@@ -617,12 +618,12 @@ export function MainArea() {
                                     )}
                                 >
                                     <div className={cn(
-                                        "w-2 h-2 rounded-full",
+                                        "w-2 h-2 rounded-full shrink-0 shadow-sm",
                                         file.status === "added" ? "bg-green-500" :
                                             file.status === "deleted" ? "bg-red-500" : "bg-blue-400"
                                     )} />
-                                    <span className="truncate">{file.path.split('/').pop()}</span>
-                                    <span className="ml-auto opacity-0 group-hover:opacity-20 text-[8px] font-mono">{file.status.charAt(0).toUpperCase()}</span>
+                                    <span className="truncate font-mono text-xs opacity-90">{file.path.split('/').pop()}</span>
+                                    <span className="ml-auto opacity-0 group-hover:opacity-60 text-[10px] font-mono font-black">{file.status.charAt(0).toUpperCase()}</span>
                                 </button>
                             ))}
                         </div>
@@ -632,7 +633,7 @@ export function MainArea() {
                 <div className="flex-1 bg-background flex flex-col overflow-hidden">
                     {selectedFile ? (
                         <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in duration-300">
-                            <div className="h-16 border-b border-border/10 flex items-center justify-between px-6 bg-card/50 backdrop-blur-md sticky top-0 z-10">
+                            <div className="h-14 border-b border-border/5 flex items-center justify-between px-6 bg-card/50 backdrop-blur-md sticky top-0 z-10">
                                 <span className="text-[11px] font-mono text-muted-foreground truncate">{selectedFile}</span>
 
                                 {repositoryStatus?.conflicts.find(c => c.path === selectedFile) && (
@@ -677,7 +678,7 @@ export function MainArea() {
                     )}
                 </div>
             </div>
-        </main>
+        </main >
     );
 }
 
@@ -721,28 +722,28 @@ function GitHubDiffView({ diff }: { diff: string }) {
 
     return (
         <div className="min-w-full inline-block pb-12">
-            {parsedLines.map((line, idx) => {
+            {parsedLines.slice(0, 400).map((line, idx) => {
                 if (line.type === 'meta' && idx < 5) return null; // Hide initial git diff meta lines
 
                 return (
                     <div
                         key={idx}
                         className={cn(
-                            "flex group min-h-[22px]",
-                            line.type === 'add' ? "bg-emerald-500/10" :
-                                line.type === 'delete' ? "bg-rose-500/10" :
-                                    line.type === 'hunk' ? "bg-white/[0.04] border-y border-white/[0.08] text-muted-foreground/60 sticky top-0 z-10 backdrop-blur-md" :
+                            "flex group min-h-[22px] font-mono text-[11px] leading-relaxed",
+                            line.type === 'add' ? "bg-emerald-500/10 text-emerald-400 border-l-4 border-emerald-500/50" :
+                                line.type === 'delete' ? "bg-rose-500/10 text-rose-400 border-l-4 border-rose-500/50" :
+                                    line.type === 'hunk' ? "bg-white/[0.04] border-y border-white/[0.08] text-muted-foreground/60 sticky top-0 z-10 backdrop-blur-md py-1.5" :
                                         line.type === 'meta' ? "text-muted-foreground/40 bg-white/[0.02] opacity-70 px-6 py-2 border-y border-white/[0.05] my-2" :
-                                            "hover:bg-white/[0.02] transition-colors"
+                                            "hover:bg-white/[0.02] border-l-4 border-transparent"
                         )}
                     >
                         {/* Line Numbers Gutter */}
                         {line.type !== 'meta' && (
-                            <div className="w-28 shrink-0 flex select-none text-muted-foreground/40 border-r border-white/[0.05] mr-4 bg-black/20 group-hover:bg-white/[0.04] transition-colors">
-                                <div className="w-14 text-right pr-3 py-0.5 font-mono text-[11px] opacity-60">
+                            <div className="w-24 shrink-0 flex select-none text-muted-foreground/30 border-r border-white/[0.05] mr-6 bg-white/[0.01] group-hover:bg-white/[0.02] font-mono text-[9px]">
+                                <div className="w-12 text-right pr-3 py-0.5 opacity-40">
                                     {line.oldLine || ''}
                                 </div>
-                                <div className="w-14 text-right pr-3 py-0.5 font-mono text-[11px] opacity-60">
+                                <div className="w-12 text-right pr-3 py-0.5 opacity-40 border-l border-white/[0.02]">
                                     {line.newLine || ''}
                                 </div>
                             </div>
@@ -750,24 +751,47 @@ function GitHubDiffView({ diff }: { diff: string }) {
 
                         {/* Content */}
                         <div className={cn(
-                            "flex-1 py-0.5 whitespace-pre pr-6 font-mono",
-                            line.type === 'add' ? "text-emerald-400/90 bg-emerald-500/5" :
-                                line.type === 'delete' ? "text-rose-400/90 bg-rose-500/5" :
-                                    line.type === 'hunk' ? "text-muted-foreground/80 font-bold py-1.5 px-2" :
-                                        line.type === 'meta' ? "italic text-[11px]" :
-                                            "text-foreground/90"
+                            "flex-1 py-0.5 whitespace-pre pr-8 font-mono text-[11px] leading-relaxed tracking-tight overflow-hidden",
+                            line.type === 'add' ? "text-emerald-400 opacity-90" :
+                                line.type === 'delete' ? "text-rose-400 opacity-90" :
+                                    line.type === 'hunk' ? "text-primary/60 font-black italic tracking-widest bg-primary/2 py-2 my-1" :
+                                        line.type === 'meta' ? "italic text-muted-foreground/30" :
+                                            "text-muted-foreground/70"
                         )}>
-                            <span className="inline-block w-6 opacity-20 select-none text-center font-mono">
+                            <span className="inline-block w-8 opacity-20 select-none text-center font-black">
                                 {line.type === 'add' ? '+' : line.type === 'delete' ? '-' : ' '}
                             </span>
                             {(() => {
                                 const content = line.type === 'add' || line.type === 'delete' ? line.content.substring(1) : line.content;
-                                return highlightCode(content);
+
+                                // PERFORMANCE: Truncate extremely long lines (prevent browser layout engine crash)
+                                const MAX_CHAR_LIMIT = 1000;
+                                const isTruncated = content.length > MAX_CHAR_LIMIT;
+                                const displayContent = isTruncated ? content.substring(0, MAX_CHAR_LIMIT) : content;
+
+                                // PERFORMANCE: Bypass highlighting for long lines (avoid expensive regex on minified files)
+                                if (displayContent.length > 300) {
+                                    return <span>{displayContent}{isTruncated && '... (line truncated)'}</span>;
+                                }
+
+                                return highlightCode(displayContent);
                             })()}
                         </div>
                     </div>
                 );
             })}
+
+            {parsedLines.length > 400 && (
+                <div className="px-6 py-12 flex flex-col items-center gap-4 bg-white/[0.02] border-t border-white/[0.05] mt-8">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-primary opacity-40 animate-pulse" />
+                    </div>
+                    <div className="text-center">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 mb-1">Diff Optimized</h4>
+                        <p className="text-[9px] text-muted-foreground/30 font-medium max-w-xs mx-auto">This file is very large. Only the first 400 lines are shown with performance limits active.</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -829,7 +853,7 @@ function FileList({
                                 <button
                                     onClick={() => onFileSelect(file.path)}
                                     className={cn(
-                                        "w-full flex items-center gap-4 px-4 py-3 transition-all text-left group border border-transparent rounded-none",
+                                        "w-full flex items-center gap-4 px-4 py-3 text-left group border border-transparent rounded-none",
                                         selectedFile === file.path
                                             ? "bg-primary/20 border-primary/30 text-primary shadow-lg shadow-primary/5"
                                             : "hover:bg-primary/10 text-muted-foreground/80 hover:text-foreground"
@@ -845,7 +869,7 @@ function FileList({
                                     <span className="text-sm font-bold truncate flex-1">{file.path}</span>
                                     {file.status && (
                                         <span className={cn(
-                                            "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity",
+                                            "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100",
                                             file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
                                                 file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
                                                     file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :

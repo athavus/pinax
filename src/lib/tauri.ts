@@ -101,6 +101,10 @@ export async function getCommitFiles(path: string, hash: string): Promise<FileCh
     return invoke<FileChange[]>("get_commit_files", { path, hash });
 }
 
+export async function getCommitFileDiff(path: string, hash: string, filePath: string): Promise<string> {
+    return invoke<string>("get_commit_file_diff", { path, hash, filePath });
+}
+
 export async function gitDiscardChanges(path: string, filePath: string): Promise<void> {
     return invoke("git_discard_changes", { path, filePath });
 }

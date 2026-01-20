@@ -68,3 +68,12 @@ pub async fn get_commit_files(repo_path: &Path, commit_hash: &str) -> GitResult<
 
     Ok(changes)
 }
+
+/// Get the diff of a specific file in a specific commit
+pub async fn get_commit_file_diff(repo_path: &Path, commit_hash: &str, file_path: &str) -> GitResult<String> {
+    // We compare the commit with its parent to see what changed in that file
+    execute_string(
+        repo_path,
+        &["diff", "--no-color", &format!("{}~1", commit_hash), commit_hash, "--", file_path]
+    ).await
+}

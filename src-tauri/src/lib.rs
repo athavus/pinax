@@ -54,6 +54,14 @@ async fn get_commit_files(path: String, hash: String) -> Result<Vec<git::FileCha
         .map_err(|e| e.to_string())
 }
 
+/// Get diff for a file in a specific commit
+#[tauri::command]
+async fn get_commit_file_diff(path: String, hash: String, file_path: String) -> Result<String, String> {
+    git::get_commit_file_diff(Path::new(&path), &hash, &file_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Get all workspaces
 #[tauri::command]
 async fn get_workspaces() -> Result<Vec<Workspace>, String> {
@@ -363,6 +371,7 @@ pub fn run() {
             git_add_to_gitignore,
             get_git_history,
             get_commit_files,
+            get_commit_file_diff,
             create_github_repository,
             get_github_avatars,
             git_init,
