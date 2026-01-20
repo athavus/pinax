@@ -220,7 +220,7 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                 <ContextMenuSub>
                     <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer">Move to Workspace</ContextMenuSubTrigger>
                     <ContextMenuPortal>
-                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-zinc-900 rounded-none shadow-2xl">
                             {workspaces.length === 0 ? (
                                 <ContextMenuItem disabled className="py-2.5 text-xs font-bold px-4">No workspaces</ContextMenuItem>
                             ) : (

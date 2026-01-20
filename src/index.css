@@ -28,7 +28,7 @@
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: 0 0% 98%;
-  --border: oklch(0.92 0.004 286.32 / 0.5);
+  --border: oklch(91.973% 0.00413 285.946 / 0.164);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
   --radius: 0;
@@ -57,46 +57,57 @@
 }
 
 .dark {
-  /* Zinc-800 / Deep Graphite palette */
-  --background: 240 10% 4%;
-  --foreground: 240 5% 96%;
+  /* Zinc Palette - "Black and Gray" */
+  --background: 240 6% 10%;
+  /* Zinc 950/900 hybrid - lighter than pitch black */
+  --foreground: 240 5% 84%;
+  /* Zinc 200 - softer white */
 
-  --card: 240 6% 10%;
-  --card-foreground: 240 5% 96%;
+  --card: 240 4% 12%;
+  /* Zinc 900 */
+  --card-foreground: 240 5% 84%;
 
-  --popover: 240 6% 12%;
-  --popover-foreground: 240 5% 96%;
+  --popover: 240 4% 12%;
+  --popover-foreground: 240 5% 84%;
 
-  --primary: 239 60% 70%;
-  --primary-foreground: 240 10% 4%;
+  /* Primary - Softer Indigo/Zinc blend */
+  --primary: 240 5% 84%;
+  /* Zinc 200 for primary text highlights */
+  --primary-foreground: 240 6% 10%;
 
   --secondary: 240 4% 16%;
-  --secondary-foreground: 240 5% 96%;
+  /* Zinc 800 */
+  --secondary-foreground: 240 5% 84%;
 
-  --muted: 240 4% 14%;
-  --muted-foreground: 240 5% 65%;
-  /* Softer muted text */
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 60%;
+  /* Zinc 400 */
 
-  --accent: 239 60% 70% / 0.12;
-  --accent-foreground: 239 60% 70%;
+  --accent: 240 4% 18%;
+  /* Zinc 800/700 */
+  --accent-foreground: 240 5% 90%;
 
-  --destructive: 0 60% 65%;
-  --destructive-foreground: 215 20% 98%;
+  --destructive: 0 60% 60%;
+  --destructive-foreground: 0 0% 98%;
 
-  --border: 240 5% 18% / 0.4;
-  --input: 240 4% 16%;
-  --ring: 239 60% 70%;
+  /* Borders - Much darker as requested (almost background tone) */
+  --border: 240 4% 5%;
+  /* Darker than Zinc 800, closer to background */
+  --input: 240 5% 18%;
+  --ring: 240 5% 50%;
 
-  --sidebar: 240 6% 8%;
-  --sidebar-foreground: 240 5% 75%;
-  --sidebar-primary: 239 60% 70%;
-  --sidebar-primary-foreground: 240 5% 96%;
+  --sidebar: 240 6% 10%;
+  --sidebar-foreground: 240 5% 76%;
+  /* Zinc 300 */
+  --sidebar-primary: 240 5% 90%;
+  --sidebar-primary-foreground: 240 6% 10%;
   --sidebar-accent: 240 4% 16%;
-  --sidebar-accent-foreground: 239 60% 70%;
-  --sidebar-border: 240 5% 15% / 0.4;
-  --sidebar-ring: 239 60% 70%;
+  --sidebar-accent-foreground: 240 5% 90%;
+  --sidebar-border: 240 4% 12%;
+  /* Matching global border */
+  --sidebar-ring: 240 5% 50%;
 
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 }
 
 
@@ -194,7 +205,7 @@ body {
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-border: var(--border);
+  --color-border: hsl(var(--border));
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
@@ -208,7 +219,7 @@ body {
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: var(--sidebar-ring);
 }
 

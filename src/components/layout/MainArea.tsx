@@ -107,7 +107,7 @@ export function MainArea() {
     }
 
     return (
-        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/20 rounded-none m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
+        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/10 rounded-none m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
             {/* Global Error Notification */}
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-500">
@@ -127,10 +127,10 @@ export function MainArea() {
             )}
 
             {/* Header with Glassmorphism */}
-            <header className="flex flex-col border-b border-border/20 bg-card/40 backdrop-blur-md">
+            <header className="flex flex-col border-b border-border/10 bg-card/40 backdrop-blur-md">
                 <div className="flex items-center h-16 px-6 gap-6">
                     {/* Repository Indicator */}
-                    <div className="flex items-center gap-4 px-4 py-2 border border-transparent max-w-[200px] shrink group/repo min-w-0">
+                    <div className="flex items-center gap-4 px-4 py-2 max-w-[200px] shrink group/repo min-w-0">
                         <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5 shrink-0">
                             <FileText className="w-4 h-4" />
                         </div>
@@ -147,7 +147,7 @@ export function MainArea() {
                         <button
                             onClick={() => setBranchSelectorOpen(!branchSelectorOpen)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all rounded-none group",
+                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-transparent hover:bg-primary/20 transition-all rounded-none group",
                                 branchSelectorOpen && "ring-2 ring-primary/30 bg-primary/20"
                             )}
                         >
@@ -162,7 +162,7 @@ export function MainArea() {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setBranchSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-card/80 backdrop-blur-2xl border border-border/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
+                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
                                     {/* Tabs (Branches / Pull Requests) */}
                                     <div className="flex border-b border-border/10 bg-muted/40 h-12">
                                         <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
@@ -298,7 +298,7 @@ export function MainArea() {
                 </div>
 
                 {/* Commit List / Changes Toggle */}
-                <div className="border-b border-border/10 flex items-center">
+                <div className="border-b border-border/5 flex items-center">
                     <button
                         onClick={() => setActiveTab("changes")}
                         className={cn(
@@ -332,7 +332,7 @@ export function MainArea() {
             {/* Main Content Area: Split View */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Left Column: File List & Commit */}
-                <div className="w-80 border-r border-border/20 flex flex-col bg-card">
+                <div className="w-80 border-r border-border/10 flex flex-col bg-card">
                     <div className="flex-1 overflow-y-auto">
                         {isLoading && !selectedFile ? (
                             <div className="p-8 text-center text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black py-20">Loading...</div>
@@ -350,7 +350,7 @@ export function MainArea() {
                                             repositoryStatus.untracked.length === 0 &&
                                             repositoryStatus.conflicts.length === 0 && (
                                                 <div className="py-24 text-center animate-in fade-in duration-1000">
-                                                    <div className="w-12 h-12 mx-auto mb-4 rounded-sm bg-primary/5 flex items-center justify-center border border-primary/10">
+                                                    <div className="w-12 h-12 mx-auto mb-4 rounded-sm bg-primary/5 flex items-center justify-center">
                                                         <Check className="w-6 h-6 text-primary opacity-30" />
                                                     </div>
                                                     <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-[0.2em]">Clean status</p>
@@ -407,7 +407,7 @@ export function MainArea() {
                                                         </div>
                                                     </div>
                                                 </ContextMenuTrigger>
-                                                <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                                                <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-900 rounded-none shadow-2xl">
                                                     <ContextMenuItem
                                                         className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
                                                         onClick={() => {
