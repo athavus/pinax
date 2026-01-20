@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT, CONTENT_TYPE};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateRepoRequest {
@@ -17,6 +18,16 @@ pub struct GitHubRepo {
     pub html_url: String,
     pub ssh_url: String,
     pub clone_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitHubUser {
+    avatar_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitHubCommitAuthor {
+    author: Option<GitHubUser>,
 }
 
 pub fn create_repo(token: &str, name: &str, description: Option<String>, private: bool) -> Result<GitHubRepo, String> {
@@ -52,4 +63,93 @@ pub fn create_repo(token: &str, name: &str, description: Option<String>, private
 
     let repo = response.json::<GitHubRepo>().map_err(|e| e.to_string())?;
     Ok(repo)
+}
+
+/// Get GitHub avatar URLs for commits using the GitHub API
+/// This uses the commits API which returns the avatar directly linked to the commit author
+/// 
+/// Arguments:
+/// - remote_url: The remote URL of the repository (e.g., https://github.com/owner/repo.git)
+/// - commit_hashes: List of commit hashes to fetch avatars for
+/// 
+/// Returns a HashMap of commit_hash -> avatar_url
+pub fn get_commit_avatars(remote_url: &str, commit_hashes: Vec<String>) -> HashMap<String, String> {
+    let client = Client::new();
+    let mut results = HashMap::new();
+    
+    // Extract owner/repo from remote URL
+    let (owner, repo) = match extract_owner_repo(remote_url) {
+        Some((o, r)) => (o, r),
+        None => return results,
+    };
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_static("pinax-desktop"));
+    headers.insert(
+        reqwest::header::ACCEPT,
+        HeaderValue::from_static("application/vnd.github.v3+json"),
+    );
+
+    for hash in commit_hashes {
+        if let Some(avatar_url) = fetch_commit_avatar(&client, &headers, &owner, &repo, &hash) {
+            results.insert(hash, avatar_url);
+        }
+    }
+    
+    results
+}
+
+/// Extract owner and repo name from a GitHub remote URL
+fn extract_owner_repo(remote_url: &str) -> Option<(String, String)> {
+    // Handle various GitHub URL formats:
+    // - https://github.com/owner/repo.git
+    // - https://github.com/owner/repo
+    // - git@github.com:owner/repo.git
+    // - git@github.com:owner/repo
+    
+    let url = remote_url.trim();
+    
+    // Handle SSH format
+    if url.starts_with("git@github.com:") {
+        let path = url.strip_prefix("git@github.com:")?;
+        let path = path.strip_suffix(".git").unwrap_or(path);
+        let parts: Vec<&str> = path.split('/').collect();
+        if parts.len() >= 2 {
+            return Some((parts[0].to_string(), parts[1].to_string()));
+        }
+    }
+    
+    // Handle HTTPS format
+    if url.contains("github.com") {
+        // Remove protocol and domain
+        let path = url
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace("github.com/", "");
+        let path = path.strip_suffix(".git").unwrap_or(&path);
+        let parts: Vec<&str> = path.split('/').collect();
+        if parts.len() >= 2 {
+            return Some((parts[0].to_string(), parts[1].to_string()));
+        }
+    }
+    
+    None
+}
+
+/// Fetch avatar URL for a specific commit from GitHub API
+fn fetch_commit_avatar(client: &Client, headers: &HeaderMap, owner: &str, repo: &str, hash: &str) -> Option<String> {
+    let url = format!("https://api.github.com/repos/{}/{}/commits/{}", owner, repo, hash);
+    
+    let response = client
+        .get(&url)
+        .headers(headers.clone())
+        .send()
+        .ok()?;
+    
+    if response.status().is_success() {
+        let commit: GitHubCommitAuthor = response.json().ok()?;
+        commit.author.map(|a| a.avatar_url)
+    } else {
+        None
+    }
 }

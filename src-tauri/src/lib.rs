@@ -163,6 +163,14 @@ async fn create_github_repository(token: String, name: String, description: Opti
     }).await.map_err(|e| e.to_string())?
 }
 
+#[tauri::command]
+async fn get_github_avatars(remote_url: String, commit_hashes: Vec<String>) -> Result<std::collections::HashMap<String, String>, String> {
+    // Run blocking requests in a separate thread
+    tauri::async_runtime::spawn_blocking(move || {
+        Ok(github::get_commit_avatars(&remote_url, commit_hashes))
+    }).await.map_err(|e| e.to_string())?
+}
+
 // ============== App Entry Point ==============
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -195,6 +203,7 @@ pub fn run() {
             git_add_to_gitignore,
             get_git_history,
             create_github_repository,
+            get_github_avatars,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

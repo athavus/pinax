@@ -98,43 +98,62 @@ export function MainArea() {
     const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
     const otherBranches = filteredBranches.filter(b => b.name !== (defaultBranch?.name || ""));
 
-    // Map authors to their most recent email to ensure consistent avatars
-    const authorEmails = React.useMemo(() => {
-        const map = new Map<string, { email: string, timestamp: number }>();
 
-        commits.forEach(commit => {
-            // Ensure we parse the timestamp correctly
-            const ts = new Date(commit.timestamp).getTime();
+    // Cache for GitHub avatar URLs by commit hash
+    const [avatarCache, setAvatarCache] = React.useState<Map<string, string>>(new Map());
 
-            const existing = map.get(commit.author);
-            if (!existing || ts > existing.timestamp) {
-                map.set(commit.author, { email: commit.email, timestamp: ts });
-            }
-        });
-
-        // Convert to simple Map<string, string>
-        const emailMap = new Map<string, string>();
-        map.forEach((val, key) => emailMap.set(key, val.email));
-        return emailMap;
-    }, [commits]);
-
-    const getAvatarUrl = (author: string, originalEmail: string) => {
-        // Use the latest email seen for this author, falling back to the commit's specific email
-        const email = authorEmails.get(author) || originalEmail;
-        const cleanEmail = email.trim().toLowerCase();
-
-        // Handle GitHub noreply emails (e.g. 12345+username@users.noreply.github.com)
-        // or username@users.noreply.github.com
-        const githubMatch = cleanEmail.match(/^(?:(\d+)\+)?([^@]+)@users\.noreply\.github\.com$/);
-
-        if (githubMatch) {
-            const username = githubMatch[2];
-            return `https://unavatar.io/github/${username}`;
+    const getAvatarUrl = React.useCallback((commitHash: string, fallbackEmail: string) => {
+        // Check if we have a cached avatar URL for this commit
+        const cachedAvatarUrl = avatarCache.get(commitHash);
+        if (cachedAvatarUrl) {
+            return cachedAvatarUrl;
         }
 
-        // Standard fallback chain
-        return `https://unavatar.io/${cleanEmail}?fallback=https://www.gravatar.com/avatar/${md5(cleanEmail)}?d=identicon`;
-    };
+        // Fallback to Gravatar while loading
+        const cleanEmail = fallbackEmail.trim().toLowerCase();
+        return `https://www.gravatar.com/avatar/${md5(cleanEmail)}?d=identicon&s=64`;
+    }, [avatarCache]);
+
+    // Resolve GitHub avatar URLs using backend command (uses GitHub Commits API)
+    React.useEffect(() => {
+        const resolveGithubAvatars = async () => {
+            // Need remote URL to fetch from GitHub API
+            if (!selectedRepo?.remote_url) return;
+
+            const hashesToResolve: string[] = [];
+
+            commits.forEach(commit => {
+                // Skip if already cached
+                if (avatarCache.has(commit.hash)) return;
+
+                if (!hashesToResolve.includes(commit.hash)) {
+                    hashesToResolve.push(commit.hash);
+                }
+            });
+
+            if (hashesToResolve.length === 0) return;
+
+            try {
+                // Call Tauri backend to fetch avatars using GitHub Commits API
+                const { invoke } = await import("@tauri-apps/api/core");
+                const avatars = await invoke<Record<string, string>>("get_github_avatars", {
+                    remoteUrl: selectedRepo.remote_url,
+                    commitHashes: hashesToResolve
+                });
+
+                // Update cache with new avatars
+                const newCache = new Map(avatarCache);
+                for (const [hash, avatarUrl] of Object.entries(avatars)) {
+                    newCache.set(hash, avatarUrl);
+                }
+                setAvatarCache(newCache);
+            } catch (error) {
+                console.error('Failed to resolve GitHub avatars:', error);
+            }
+        };
+
+        resolveGithubAvatars();
+    }, [commits, selectedRepo?.remote_url]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!selectedRepositoryPath || !selectedRepo) {
         return (
@@ -437,7 +456,7 @@ export function MainArea() {
                                                         <p className="text-sm font-bold text-foreground leading-relaxed truncate">{commit.message}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <img
-                                                                src={getAvatarUrl(commit.author, commit.email)}
+                                                                src={getAvatarUrl(commit.hash, commit.email)}
                                                                 alt={commit.author}
                                                                 className="w-4 h-4 rounded-full opacity-100"
                                                             />
