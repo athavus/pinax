@@ -1,177 +1,249 @@
+/*
+ * JavaScript MD5 2.19.0
+ * https://github.com/blueimp/JavaScript-MD5
+ *
+ * Copyright 2011, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * https://opensource.org/licenses/MIT
+ *
+ * Based on
+ * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
+ * Digest Algorithm, as defined in RFC 1321.
+ * Version 2.1 Copyright (C) Paul Johnston 1999 - 2002.
+ * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+ * Distributed under the BSD License
+ * See http://pajhome.org.uk/crypt/md5 for more info.
+ */
 
-export function md5(string: string): string {
-    function rotateLeft(lValue: number, iShiftBits: number): number {
-        return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+function safeAdd(x: number, y: number) {
+    const lsw = (x & 0xffff) + (y & 0xffff)
+    const msw = (x >> 16) + (y >> 16) + (lsw >> 16)
+    return (msw << 16) | (lsw & 0xffff)
+}
+
+function bitRotateLeft(num: number, cnt: number) {
+    return (num << cnt) | (num >>> (32 - cnt))
+}
+
+function md5cmn(q: number, a: number, b: number, x: number, s: number, t: number) {
+    return safeAdd(bitRotateLeft(safeAdd(safeAdd(a, q), safeAdd(x, t)), s), b)
+}
+
+function md5ff(a: number, b: number, c: number, d: number, x: number, s: number, t: number) {
+    return md5cmn((b & c) | (~b & d), a, b, x, s, t)
+}
+
+function md5gg(a: number, b: number, c: number, d: number, x: number, s: number, t: number) {
+    return md5cmn((b & d) | (c & ~d), a, b, x, s, t)
+}
+
+function md5hh(a: number, b: number, c: number, d: number, x: number, s: number, t: number) {
+    return md5cmn(b ^ c ^ d, a, b, x, s, t)
+}
+
+function md5ii(a: number, b: number, c: number, d: number, x: number, s: number, t: number) {
+    return md5cmn(c ^ (b | ~d), a, b, x, s, t)
+}
+
+function binlMD5(x: Array<number>, len: number) {
+    /* append padding */
+    x[len >> 5] |= 0x80 << (len % 32)
+    x[(((len + 64) >>> 9) << 4) + 14] = len
+
+    let i
+    let olda
+    let oldb
+    let oldc
+    let oldd
+    let a = 1732584193
+    let b = -271733879
+    let c = -1732584194
+    let d = 271733878
+
+    for (i = 0; i < x.length; i += 16) {
+        olda = a
+        oldb = b
+        oldc = c
+        oldd = d
+
+        a = md5ff(a, b, c, d, x[i], 7, -680876936)
+        d = md5ff(d, a, b, c, x[i + 1], 12, -389564586)
+        c = md5ff(c, d, a, b, x[i + 2], 17, 606105819)
+        b = md5ff(b, c, d, a, x[i + 3], 22, -1044525330)
+        a = md5ff(a, b, c, d, x[i + 4], 7, -176418897)
+        d = md5ff(d, a, b, c, x[i + 5], 12, 1200080426)
+        c = md5ff(c, d, a, b, x[i + 6], 17, -1473231341)
+        b = md5ff(b, c, d, a, x[i + 7], 22, -45705983)
+        a = md5ff(a, b, c, d, x[i + 8], 7, 1770035416)
+        d = md5ff(d, a, b, c, x[i + 9], 12, -1958414417)
+        c = md5ff(c, d, a, b, x[i + 10], 17, -42063)
+        b = md5ff(b, c, d, a, x[i + 11], 22, -1990404162)
+        a = md5ff(a, b, c, d, x[i + 12], 7, 1804603682)
+        d = md5ff(d, a, b, c, x[i + 13], 12, -40341101)
+        c = md5ff(c, d, a, b, x[i + 14], 17, -1502002290)
+        b = md5ff(b, c, d, a, x[i + 15], 22, 1236535329)
+
+        a = md5gg(a, b, c, d, x[i + 1], 5, -165796510)
+        d = md5gg(d, a, b, c, x[i + 6], 9, -1069501632)
+        c = md5gg(c, d, a, b, x[i + 11], 14, 643717713)
+        b = md5gg(b, c, d, a, x[i], 20, -373897302)
+        a = md5gg(a, b, c, d, x[i + 5], 5, -701558691)
+        d = md5gg(d, a, b, c, x[i + 10], 9, 38016083)
+        c = md5gg(c, d, a, b, x[i + 15], 14, -660478335)
+        b = md5gg(b, c, d, a, x[i + 4], 20, -405537848)
+        a = md5gg(a, b, c, d, x[i + 9], 5, 568446438)
+        d = md5gg(d, a, b, c, x[i + 14], 9, -1019803690)
+        c = md5gg(c, d, a, b, x[i + 3], 14, -187363961)
+        b = md5gg(b, c, d, a, x[i + 8], 20, 1163531501)
+        a = md5gg(a, b, c, d, x[i + 13], 5, -1444681467)
+        d = md5gg(d, a, b, c, x[i + 2], 9, -51403784)
+        c = md5gg(c, d, a, b, x[i + 7], 14, 1735328473)
+        b = md5gg(b, c, d, a, x[i + 12], 20, -1926607734)
+
+        a = md5hh(a, b, c, d, x[i + 5], 4, -378558)
+        d = md5hh(d, a, b, c, x[i + 8], 11, -2022574463)
+        c = md5hh(c, d, a, b, x[i + 11], 16, 1839030562)
+        b = md5hh(b, c, d, a, x[i + 14], 23, -35309556)
+        a = md5hh(a, b, c, d, x[i + 1], 4, -1530992060)
+        d = md5hh(d, a, b, c, x[i + 4], 11, 1272893353)
+        c = md5hh(c, d, a, b, x[i + 7], 16, -155497632)
+        b = md5hh(b, c, d, a, x[i + 10], 23, -1094730640)
+        a = md5hh(a, b, c, d, x[i + 13], 4, 681279174)
+        d = md5hh(d, a, b, c, x[i], 11, -358537222)
+        c = md5hh(c, d, a, b, x[i + 3], 16, -722521979)
+        b = md5hh(b, c, d, a, x[i + 6], 23, 76029189)
+        a = md5hh(a, b, c, d, x[i + 9], 4, -640364487)
+        d = md5hh(d, a, b, c, x[i + 12], 11, -421815835)
+        c = md5hh(c, d, a, b, x[i + 15], 16, 530742520)
+        b = md5hh(b, c, d, a, x[i + 2], 23, -995338651)
+
+        a = md5ii(a, b, c, d, x[i], 6, -198630844)
+        d = md5ii(d, a, b, c, x[i + 7], 10, 1126891415)
+        c = md5ii(c, d, a, b, x[i + 14], 15, -1416354905)
+        b = md5ii(b, c, d, a, x[i + 5], 21, -57434055)
+        a = md5ii(a, b, c, d, x[i + 12], 6, 1700485571)
+        d = md5ii(d, a, b, c, x[i + 3], 10, -1894986606)
+        c = md5ii(c, d, a, b, x[i + 10], 15, -1051523)
+        b = md5ii(b, c, d, a, x[i + 1], 21, -2054922799)
+        a = md5ii(a, b, c, d, x[i + 8], 6, 1873313359)
+        d = md5ii(d, a, b, c, x[i + 15], 10, -30611744)
+        c = md5ii(c, d, a, b, x[i + 6], 15, -1560198380)
+        b = md5ii(b, c, d, a, x[i + 13], 21, 1309151649)
+        a = md5ii(a, b, c, d, x[i + 4], 6, -145523070)
+        d = md5ii(d, a, b, c, x[i + 11], 10, -1120210379)
+        c = md5ii(c, d, a, b, x[i + 2], 15, 718787259)
+        b = md5ii(b, c, d, a, x[i + 9], 21, -343485551)
+
+        a = safeAdd(a, olda)
+        b = safeAdd(b, oldb)
+        c = safeAdd(c, oldc)
+        d = safeAdd(d, oldd)
+    }
+    return [a, b, c, d]
+}
+
+function binl2rstr(input: Array<number>) {
+    let i
+    let output = ''
+    const length32 = input.length * 32
+    for (i = 0; i < length32; i += 8) {
+        output += String.fromCharCode((input[i >> 5] >>> (i % 32)) & 0xff)
+    }
+    return output
+}
+
+function rstr2binl(input: string) {
+    let i
+    const output = Array(input.length >> 2)
+    for (i = 0; i < output.length; i++) {
+        output[i] = 0
+    }
+    for (i = 0; i < input.length * 8; i += 8) {
+        output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << (i % 32)
+    }
+    return output
+}
+
+function rstrMD5(s: string) {
+    return binl2rstr(binlMD5(rstr2binl(s), s.length * 8))
+}
+
+function rstrHMACMD5(key: string, data: string) {
+    let i
+    let bkey = rstr2binl(key)
+    const ipad = Array(16)
+    const opad = Array(16)
+
+    if (bkey.length > 16) {
+        bkey = binlMD5(bkey, key.length * 8)
     }
 
-    function addUnsigned(lX: number, lY: number): number {
-        const lX4 = (lX & 0x40000000);
-        const lY4 = (lY & 0x40000000);
-        const lX8 = (lX & 0x80000000);
-        const lY8 = (lY & 0x80000000);
-        const lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
-        if (lX4 & lY4) {
-            return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+    for (i = 0; i < 16; i++) {
+        ipad[i] = bkey[i] ^ 0x36363636
+        opad[i] = bkey[i] ^ 0x5c5c5c5c
+    }
+
+    const hash = binlMD5(ipad.concat(rstr2binl(data)), 512 + data.length * 8)
+    return binl2rstr(binlMD5(opad.concat(hash), 512 + 128))
+}
+
+function rstr2hex(input: string) {
+    const hexTab = '0123456789abcdef'
+    let output = ''
+    let x
+    let i
+    for (i = 0; i < input.length; i++) {
+        x = input.charCodeAt(i)
+        output += hexTab.charAt((x >>> 4) & 0x0f) + hexTab.charAt(x & 0x0f)
+    }
+    return output
+}
+
+function str2rstrUTF8(input: string) {
+    let output = ''
+    let i = -1
+    let x, y
+
+    while (++i < input.length) {
+        x = input.charCodeAt(i)
+        y = i + 1 < input.length ? input.charCodeAt(i + 1) : 0
+        if (x >= 0xd800 && x <= 0xdbff && y >= 0xdc00 && y <= 0xdfff) {
+            x = 0x10000 + ((x & 0x03ff) << 10) + (y & 0x03ff)
+            i++
         }
-        if (lX4 | lY4) {
-            if (lResult & 0x40000000) {
-                return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
-            } else {
-                return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
-            }
+        if (x <= 0x7f) {
+            output += String.fromCharCode(x)
+        } else if (x <= 0x7ff) {
+            output += String.fromCharCode(0xc0 | ((x >>> 6) & 0x1f), 0x80 | (x & 0x3f))
+        } else if (x <= 0xffff) {
+            output += String.fromCharCode(
+                0xe0 | ((x >>> 12) & 0x0f),
+                0x80 | ((x >>> 6) & 0x3f),
+                0x80 | (x & 0x3f)
+            )
         } else {
-            return (lResult ^ lX8 ^ lY8);
+            output += String.fromCharCode(
+                0xf0 | ((x >>> 18) & 0x07),
+                0x80 | ((x >>> 12) & 0x3f),
+                0x80 | ((x >>> 6) & 0x3f),
+                0x80 | (x & 0x3f)
+            )
         }
     }
+    return output
+}
 
-    function F(x: number, y: number, z: number): number {
-        return (x & y) | ((~x) & z);
-    }
-    function G(x: number, y: number, z: number): number {
-        return (x & z) | (y & (~z));
-    }
-    function H(x: number, y: number, z: number): number {
-        return (x ^ y ^ z);
-    }
-    function I(x: number, y: number, z: number): number {
-        return (y ^ (x | (~z)));
-    }
-
-    function FF(a: number, b: number, c: number, d: number, x: number, s: number, ac: number): number {
-        a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
-        return addUnsigned(rotateLeft(a, s), b);
-    }
-
-    function GG(a: number, b: number, c: number, d: number, x: number, s: number, ac: number): number {
-        a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
-        return addUnsigned(rotateLeft(a, s), b);
-    }
-
-    function HH(a: number, b: number, c: number, d: number, x: number, s: number, ac: number): number {
-        a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
-        return addUnsigned(rotateLeft(a, s), b);
-    }
-
-    function II(a: number, b: number, c: number, d: number, x: number, s: number, ac: number): number {
-        a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
-        return addUnsigned(rotateLeft(a, s), b);
-    }
-
-    function convertToWordArray(string: string): number[] {
-        let lWordCount;
-        const lMessageLength = string.length;
-        const lNumberOfWords_temp1 = lMessageLength + 8;
-        const lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64;
-        const lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16;
-        const lWordArray = Array(lNumberOfWords - 1);
-        let lBytePosition = 0;
-        let lByteCount = 0;
-        while (lByteCount < lMessageLength) {
-            lWordCount = (lByteCount - (lByteCount % 4)) / 4;
-            lBytePosition = (lByteCount % 4) * 8;
-            lWordArray[lWordCount] = (lWordArray[lWordCount] | (string.charCodeAt(lByteCount) << lBytePosition));
-            lByteCount++;
+export function md5(string: string, key?: string, raw?: boolean): string {
+    if (!key) {
+        if (!raw) {
+            return rstr2hex(rstrMD5(str2rstrUTF8(string)))
         }
-        lWordCount = (lByteCount - (lByteCount % 4)) / 4;
-        lBytePosition = (lByteCount % 4) * 8;
-        lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
-        lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
-        lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
-        return lWordArray;
+        return rstrMD5(str2rstrUTF8(string))
     }
-
-    function wordToHex(lValue: number): string {
-        let wordToHexValue = "";
-        let wordToHexValue_temp = "";
-        let lByte;
-        let lCount;
-        for (lCount = 0; lCount <= 3; lCount++) {
-            lByte = (lValue >>> (lCount * 8)) & 255;
-            wordToHexValue_temp = "0" + lByte.toString(16);
-            wordToHexValue = wordToHexValue + wordToHexValue_temp.substr(wordToHexValue_temp.length - 2, 2);
-        }
-        return wordToHexValue;
+    if (!raw) {
+        return rstr2hex(rstrHMACMD5(key, str2rstrUTF8(string)))
     }
-
-    let x = Array();
-    let k, AA, BB, CC, DD, a, b, c, d;
-    const S11 = 7, S12 = 12, S13 = 17, S14 = 22;
-    const S21 = 5, S22 = 9, S23 = 14, S24 = 20;
-    const S31 = 4, S32 = 11, S33 = 16, S34 = 23;
-    const S41 = 6, S42 = 10, S43 = 15, S44 = 21;
-
-    // eslint-disable-next-line
-    string = string;
-
-    x = convertToWordArray(string);
-    a = 0x67452301; b = 0xEFCDAB89; c = 0x98BADCFE; d = 0x10325476;
-
-    for (k = 0; k < x.length; k += 16) {
-        AA = a; BB = b; CC = c; DD = d;
-        a = FF(a, b, c, d, x[k + 0], S11, 0xD76AA478);
-        d = FF(d, a, b, c, x[k + 1], S12, 0xE8C7B756);
-        c = FF(c, d, a, b, x[k + 2], S13, 0x242070DB);
-        b = FF(b, c, d, a, x[k + 3], S14, 0xC1BDCEEE);
-        a = FF(a, b, c, d, x[k + 4], S11, 0xF57C0FAF);
-        d = FF(d, a, b, c, x[k + 5], S12, 0x4787C62A);
-        c = FF(c, d, a, b, x[k + 6], S13, 0xA8304613);
-        b = FF(b, c, d, a, x[k + 7], S14, 0xFD469501);
-        a = FF(a, b, c, d, x[k + 8], S11, 0x698098D8);
-        d = FF(d, a, b, c, x[k + 9], S12, 0x8B44F7AF);
-        c = FF(c, d, a, b, x[k + 10], S13, 0xFFFF5BB1);
-        b = FF(b, c, d, a, x[k + 11], S14, 0x895CD7BE);
-        a = FF(a, b, c, d, x[k + 12], S11, 0x6B901122);
-        d = FF(d, a, b, c, x[k + 13], S12, 0xFD987193);
-        c = FF(c, d, a, b, x[k + 14], S13, 0xA679438E);
-        b = FF(b, c, d, a, x[k + 15], S14, 0x49B40821);
-        d = GG(d, a, b, c, x[k + 1], S21, 0xF61E2562);
-        c = GG(c, d, a, b, x[k + 6], S22, 0xC040B340);
-        b = GG(b, c, d, a, x[k + 11], S23, 0x265E5A51);
-        a = GG(a, b, c, d, x[k + 0], S24, 0xE9B6C7AA);
-        d = GG(d, a, b, c, x[k + 5], S21, 0xD62F105D);
-        c = GG(c, d, a, b, x[k + 10], S22, 0x02441453);
-        b = GG(b, c, d, a, x[k + 15], S23, 0xD8A1E681);
-        a = GG(a, b, c, d, x[k + 4], S24, 0xE7D3FBC8);
-        d = GG(d, a, b, c, x[k + 9], S21, 0x21E1CDE6);
-        c = GG(c, d, a, b, x[k + 14], S22, 0xC33707D6);
-        b = GG(b, c, d, a, x[k + 3], S23, 0xF4D50D87);
-        a = GG(a, b, c, d, x[k + 8], S24, 0x455A14ED);
-        d = GG(d, a, b, c, x[k + 13], S21, 0xA9E3E905);
-        c = GG(c, d, a, b, x[k + 2], S22, 0xFCEFA3F8);
-        b = GG(b, c, d, a, x[k + 7], S23, 0x676F02D9);
-        a = GG(a, b, c, d, x[k + 12], S24, 0x8D2A4C8A);
-        d = HH(d, a, b, c, x[k + 5], S31, 0xFFFA3942);
-        c = HH(c, d, a, b, x[k + 8], S32, 0x8771F681);
-        b = HH(b, c, d, a, x[k + 11], S33, 0x6D9D6122);
-        a = HH(a, b, c, d, x[k + 14], S31, 0xFDE5380C);
-        d = HH(d, a, b, c, x[k + 1], S32, 0xA4BEEA44);
-        c = HH(c, d, a, b, x[k + 4], S33, 0x4BDECFA9);
-        b = HH(b, c, d, a, x[k + 7], S34, 0xF6BB4B60);
-        a = HH(a, b, c, d, x[k + 10], S31, 0xBEBFBC70);
-        d = HH(d, a, b, c, x[k + 13], S32, 0x289B7EC6);
-        c = HH(c, d, a, b, x[k + 0], S33, 0xEAA127FA);
-        b = HH(b, c, d, a, x[k + 3], S34, 0xD4EF3085);
-        a = HH(a, b, c, d, x[k + 6], S31, 0x04881d05);
-        d = HH(d, a, b, c, x[k + 9], S32, 0xD9D4D039);
-        c = HH(c, d, a, b, x[k + 12], S33, 0xE6DB99E5);
-        b = HH(b, c, d, a, x[k + 15], S34, 0x1FA27CF8);
-        a = HH(a, b, c, d, x[k + 2], S31, 0xC4AC5665);
-        d = II(d, a, b, c, x[k + 0], S41, 0xF4292244);
-        c = II(c, d, a, b, x[k + 7], S42, 0x432AFF97);
-        b = II(b, c, d, a, x[k + 14], S43, 0xAB9423A7);
-        a = II(a, b, c, d, x[k + 5], S44, 0xFC93A039);
-        d = II(d, a, b, c, x[k + 12], S41, 0x655B59C3);
-        c = II(c, d, a, b, x[k + 3], S42, 0x8F0CCC92);
-        b = II(b, c, d, a, x[k + 10], S43, 0xFFEFF47D);
-        a = II(a, b, c, d, x[k + 1], S44, 0x85845DD1);
-        d = II(d, a, b, c, x[k + 8], S41, 0x6FA87E4F);
-        c = II(c, d, a, b, x[k + 15], S42, 0xFE2CE6E0);
-        b = II(b, c, d, a, x[k + 6], S43, 0xA3014314);
-        a = II(a, b, c, d, x[k + 13], S44, 0x4E0811A1);
-        d = II(d, a, b, c, x[k + 4], S41, 0xF7537E82);
-        c = II(c, d, a, b, x[k + 11], S42, 0xBD3AF235);
-        b = II(b, c, d, a, x[k + 2], S43, 0x2AD7D2BB);
-        a = II(a, b, c, d, x[k + 9], S44, 0xEB86D391);
-    }
-    return wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d);
+    return rstrHMACMD5(key, str2rstrUTF8(string))
 }

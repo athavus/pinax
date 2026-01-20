@@ -98,6 +98,44 @@ export function MainArea() {
     const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
     const otherBranches = filteredBranches.filter(b => b.name !== (defaultBranch?.name || ""));
 
+    // Map authors to their most recent email to ensure consistent avatars
+    const authorEmails = React.useMemo(() => {
+        const map = new Map<string, { email: string, timestamp: number }>();
+
+        commits.forEach(commit => {
+            // Ensure we parse the timestamp correctly
+            const ts = new Date(commit.timestamp).getTime();
+
+            const existing = map.get(commit.author);
+            if (!existing || ts > existing.timestamp) {
+                map.set(commit.author, { email: commit.email, timestamp: ts });
+            }
+        });
+
+        // Convert to simple Map<string, string>
+        const emailMap = new Map<string, string>();
+        map.forEach((val, key) => emailMap.set(key, val.email));
+        return emailMap;
+    }, [commits]);
+
+    const getAvatarUrl = (author: string, originalEmail: string) => {
+        // Use the latest email seen for this author, falling back to the commit's specific email
+        const email = authorEmails.get(author) || originalEmail;
+        const cleanEmail = email.trim().toLowerCase();
+
+        // Handle GitHub noreply emails (e.g. 12345+username@users.noreply.github.com)
+        // or username@users.noreply.github.com
+        const githubMatch = cleanEmail.match(/^(?:(\d+)\+)?([^@]+)@users\.noreply\.github\.com$/);
+
+        if (githubMatch) {
+            const username = githubMatch[2];
+            return `https://unavatar.io/github/${username}`;
+        }
+
+        // Standard fallback chain
+        return `https://unavatar.io/${cleanEmail}?fallback=https://www.gravatar.com/avatar/${md5(cleanEmail)}?d=identicon`;
+    };
+
     if (!selectedRepositoryPath || !selectedRepo) {
         return (
             <main className="flex-1 flex flex-col bg-background/80 backdrop-blur-3xl overflow-hidden border border-border/40 rounded-none m-4 shadow-2xl">
@@ -135,8 +173,8 @@ export function MainArea() {
                             <FileText className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground/30 leading-none mb-1.5 tracking-[0.1em]">Repository</span>
-                            <span className="text-sm font-bold truncate text-foreground/70 group-hover/repo:text-foreground transition-colors">{selectedRepo.name}</span>
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground/70 leading-none mb-1.5 tracking-[0.1em]">Repository</span>
+                            <span className="text-sm font-bold truncate text-foreground group-hover/repo:text-foreground transition-colors">{selectedRepo.name}</span>
                         </div>
                     </div>
 
@@ -153,7 +191,7 @@ export function MainArea() {
                         >
                             <GitBranch className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100" />
                             <span className="text-sm font-black text-foreground">{repositoryStatus?.branch || "main"}</span>
-                            <ChevronDown className={cn("w-4 h-4 text-muted-foreground/30 transition-transform", branchSelectorOpen && "rotate-180")} />
+                            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", branchSelectorOpen && "rotate-180")} />
                         </button>
 
                         {branchSelectorOpen && (
@@ -162,7 +200,7 @@ export function MainArea() {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setBranchSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
+                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-border shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
                                     {/* Tabs (Branches / Pull Requests) */}
                                     <div className="flex border-b border-border/10 bg-muted/40 h-12">
                                         <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
@@ -196,7 +234,7 @@ export function MainArea() {
                                         {defaultBranch && (!branchFilter || defaultBranch.name.toLowerCase().includes(branchFilter.toLowerCase())) && (
                                             <div className="py-3">
                                                 <div className="px-5 py-1.5">
-                                                    <span className="text-[10px] font-black uppercase text-secondary-foreground/40 tracking-[0.2em]">Default branch</span>
+                                                    <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Default branch</span>
                                                 </div>
                                                 <button
                                                     onClick={() => handleBranchSwitch(defaultBranch.name)}
@@ -217,7 +255,7 @@ export function MainArea() {
                                         {/* Other Branches */}
                                         <div className="py-3">
                                             <div className="px-5 py-1.5">
-                                                <span className="text-[10px] font-black uppercase text-secondary-foreground/40 tracking-[0.2em]">Other branches</span>
+                                                <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Other branches</span>
                                             </div>
                                             {otherBranches.length > 0 ? (
                                                 <div className="px-2 space-y-1">
@@ -353,7 +391,7 @@ export function MainArea() {
                                                     <div className="w-12 h-12 mx-auto mb-4 rounded-sm bg-primary/5 flex items-center justify-center">
                                                         <Check className="w-6 h-6 text-primary opacity-30" />
                                                     </div>
-                                                    <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-[0.2em]">Clean status</p>
+                                                    <p className="text-[10px] text-muted-foreground/70 font-black uppercase tracking-[0.2em]">Clean status</p>
                                                 </div>
                                             )}
                                     </>
@@ -394,20 +432,20 @@ export function MainArea() {
                                                                     </button>
                                                                 )}
                                                             </div>
-                                                            <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
+                                                            <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-tighter shrink-0">{dateStr}</span>
                                                         </div>
-                                                        <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
+                                                        <p className="text-sm font-bold text-foreground leading-relaxed truncate">{commit.message}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <img
-                                                                src={`https://www.gravatar.com/avatar/${md5(commit.email.trim().toLowerCase())}?d=identicon`}
+                                                                src={getAvatarUrl(commit.author, commit.email)}
                                                                 alt={commit.author}
-                                                                className="w-4 h-4 rounded-full opacity-80"
+                                                                className="w-4 h-4 rounded-full opacity-100"
                                                             />
-                                                            <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
+                                                            <span className="text-[10px] font-bold text-muted-foreground">{commit.author}</span>
                                                         </div>
                                                     </div>
                                                 </ContextMenuTrigger>
-                                                <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-900 rounded-none shadow-2xl">
+                                                <ContextMenuContent className="w-64 bg-zinc-900 border-border rounded-none shadow-2xl">
                                                     <ContextMenuItem
                                                         className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
                                                         onClick={() => {

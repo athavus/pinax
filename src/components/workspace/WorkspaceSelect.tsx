@@ -77,8 +77,8 @@ export function WorkspaceSelect() {
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={cn(
-                        "w-full flex items-center gap-4 px-5 py-4 bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 rounded-none transition-all duration-300 hover:bg-primary/15 hover:border-primary/20 text-left shadow-sm group active:scale-[0.98]",
-                        isOpen && "ring-2 ring-primary/20 border-primary/30 bg-primary/20 shadow-lg shadow-primary/5"
+                        "w-full flex items-center gap-4 px-5 py-4 bg-gradient-to-br from-primary/10 to-transparent border-none rounded-none transition-all duration-300 hover:bg-primary/15 text-left shadow-sm group active:scale-[0.98]",
+                        isOpen && "ring-2 ring-primary/20 bg-primary/20 shadow-lg shadow-primary/5"
                     )}
                 >
                     <div className="p-2.5 rounded-none bg-primary/20 text-primary shadow-sm group-hover:scale-110 group-hover:bg-primary/30 transition-all duration-500 ring-4 ring-primary/5">

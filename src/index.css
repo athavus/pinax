@@ -90,8 +90,8 @@
   --destructive: 0 60% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  /* Borders - Much darker as requested (almost background tone) */
-  --border: 240 4% 5%;
+  /* Borders - Background color with low opacity for subtle effect */
+  --border: 240 6% 10% / 0.15;
   /* Darker than Zinc 800, closer to background */
   --input: 240 5% 18%;
   --ring: 240 5% 50%;
