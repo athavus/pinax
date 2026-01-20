@@ -574,7 +574,7 @@ export function MainArea() {
                                 disabled={!commitMessage.trim() || isLoading}
                                 className={cn(
                                     "w-full py-3 bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 rounded-none flex items-center justify-center gap-2 group relative overflow-hidden",
-                                    isCommitted && "bg-green-500 hover:bg-green-600 border-green-400"
+                                    isCommitted && "brightness-110"
                                 )}
                             >
                                 <span className={cn("relative z-10 flex items-center gap-2", isCommitted && "opacity-0")}>
