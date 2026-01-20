@@ -125,6 +125,18 @@ export async function gitCherryPickCommit(path: string, hash: string): Promise<v
     return invoke("git_cherry_pick_commit", { path, hash });
 }
 
+export async function gitInit(path: string): Promise<void> {
+    return invoke("git_init", { path });
+}
+
+export async function gitRemoteAdd(path: string, name: string, url: string): Promise<void> {
+    return invoke("git_remote_add", { path, name, url });
+}
+
+export async function gitRemoteSetUrl(path: string, name: string, url: string): Promise<void> {
+    return invoke("git_remote_set_url", { path, name, url });
+}
+
 // ============== GitHub Integration ==============
 
 export async function createGithubRepository(
@@ -139,4 +151,8 @@ export async function createGithubRepository(
         description,
         private: privateRepo,
     });
+}
+
+export async function getGithubAvatars(remoteUrl: string, commitHashes: string[]): Promise<Record<string, string>> {
+    return invoke("get_github_avatars", { remoteUrl, commitHashes });
 }

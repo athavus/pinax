@@ -220,3 +220,92 @@ pub async fn cherry_pick_commit(path: &Path, hash: &str) -> GitResult<()> {
     }
     Ok(())
 }
+/// Initialize a new Git repository
+pub async fn init(path: &Path) -> GitResult<()> {
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| GitError {
+            message: e.to_string(),
+            command: "mkdir -p".to_string(),
+        })?;
+    }
+    
+    // Create the directory itself if it doesn't exist
+    if !path.exists() {
+        std::fs::create_dir_all(path).map_err(|e| GitError {
+            message: e.to_string(),
+            command: "mkdir".to_string(),
+        })?;
+    }
+
+    let output = execute(path, &["init"]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "init".to_string(),
+        });
+    }
+    Ok(())
+}
+
+/// Add a remote to the repository
+pub async fn remote_add(path: &Path, name: &str, url: &str) -> GitResult<()> {
+    let output = execute(path, &["remote", "add", name, url]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("remote add {} {}", name, url),
+        });
+    }
+    Ok(())
+}
+
+/// Set a remote URL
+pub async fn remote_set_url(path: &Path, name: &str, url: &str) -> GitResult<()> {
+    let output = execute(path, &["remote", "set-url", name, url]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("remote set-url {} {}", name, url),
+        });
+    }
+    Ok(())
+}
+
+/// Clone a repository
+pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| GitError {
+            message: e.to_string(),
+            command: "mkdir -p".to_string(),
+        })?;
+    }
+
+    // Git clone handles directory creation of the target if it doesn't exist, 
+    // but the parent must exist.
+    let mut command = tokio::process::Command::new("git");
+    let output = command
+        .args(&["clone", url, path.to_str().unwrap_or_default()])
+        .envs(std::env::vars())
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
+        .output()
+        .await
+        .map_err(|e| GitError {
+            message: format!("Failed to execute git clone: {}", e),
+            command: format!("clone {} {}", url, path.display()),
+        })?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: "clone".to_string(),
+        });
+    }
+    Ok(())
+}

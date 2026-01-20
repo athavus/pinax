@@ -30,7 +30,10 @@ import {
     gitCheckoutCommit,
     gitRevertCommit,
     gitResetToCommit,
-    gitCherryPickCommit
+    gitCherryPickCommit,
+    gitInit,
+    gitRemoteAdd,
+    gitRemoteSetUrl
 } from "@/lib/tauri";
 
 interface AppState {
@@ -86,7 +89,7 @@ interface AppState {
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
-
+    publishRepository: (localPath: string, name: string, token: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
     setNavigationContext: (context: NavigationContext) => void;
     loadWorkspaces: () => Promise<void>;
     scanForRepositories: (path: string) => Promise<void>;
@@ -422,7 +425,50 @@ export const useAppStore = create<AppState>((set, get) => ({
             set({ isLoading: false });
         } catch (error) {
             set({ error: `Failed to create GitHub repository: ${error}`, isLoading: false });
-            throw error; // Re-throw to let component handle success/failure UI
+            throw error;
+        }
+    },
+
+    publishRepository: async (localPath, name, token, description, isPrivate) => {
+        set({ isLoading: true });
+        try {
+            // 1. Create GitHub repository
+            const ghRepo = await createGithubRepository(token, name, description, isPrivate);
+
+            // 2. Initialize local repository if not already one
+            await gitInit(localPath);
+
+            // 3. Add remote
+            try {
+                await gitRemoteAdd(localPath, "origin", ghRepo.clone_url);
+            } catch (e) {
+                // If remote already exists, try to set it
+                await gitRemoteSetUrl(localPath, "origin", ghRepo.clone_url);
+            }
+
+            // 4. Initial commit and push (if there are files)
+            const status = await getRepositoryStatus(localPath);
+            if (status.untracked.length > 0 || status.unstaged.length > 0) {
+                await gitCommit(localPath, "Initial commit from Pinax");
+            }
+
+            await gitPush(localPath);
+
+            // 5. Add to current workspace if needed, and select it
+            const workspaceId = get().selectedWorkspaceId || "uncategorized";
+            await addRepositoryToWorkspace(workspaceId, localPath);
+            await get().loadWorkspaces();
+            await get().setSelectedRepository(localPath);
+
+            set({ isLoading: false });
+
+            // Alert success
+            setTimeout(() => {
+                alert(`Repository "${name}" published successfully to GitHub!`);
+            }, 100);
+        } catch (error) {
+            set({ error: `Publish failed: ${error}`, isLoading: false });
+            throw error;
         }
     },
 

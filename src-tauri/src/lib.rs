@@ -152,6 +152,20 @@ async fn git_reset_to_commit(path: String, hash: String) -> Result<(), String> {
 async fn git_cherry_pick_commit(path: String, hash: String) -> Result<(), String> {
     git::cherry_pick_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
 }
+#[tauri::command]
+async fn git_init(path: String) -> Result<(), String> {
+    git::init(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_remote_add(path: String, name: String, url: String) -> Result<(), String> {
+    git::remote_add(Path::new(&path), &name, &url).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_remote_set_url(path: String, name: String, url: String) -> Result<(), String> {
+    git::remote_set_url(Path::new(&path), &name, &url).await.map_err(|e| e.to_string())
+}
 
 // ============== GitHub Commands ==============
 
@@ -177,6 +191,7 @@ async fn get_github_avatars(remote_url: String, commit_hashes: Vec<String>) -> R
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             scan_repositories,
             get_repository_status,
@@ -204,6 +219,9 @@ pub fn run() {
             get_git_history,
             create_github_repository,
             get_github_avatars,
+            git_init,
+            git_remote_add,
+            git_remote_set_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

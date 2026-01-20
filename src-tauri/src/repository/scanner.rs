@@ -55,8 +55,10 @@ pub async fn scan_repositories(path: &Path) -> Result<Vec<Repository>, String> {
                 last_commit: None,
             });
 
-            // Don't scan inside Git repositories
-            continue;
+            // Don't scan inside Git repositories, unless it's the start folder
+            if depth > 0 {
+                continue;
+            }
         }
 
         // Read directory entries

@@ -2,18 +2,20 @@
  * Sidebar component with workspace and repository navigation
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
-import { FolderGit2, Check } from "lucide-react";
+import { FolderGit2, Check, Plus } from "lucide-react";
 import { Repository } from "@/types";
 import { WorkspaceSelect } from "@/components/workspace";
 import { useWorkspaceRepositories } from "@/hooks/useWorkspaceRepositories";
 import { homeDir } from "@tauri-apps/api/path";
+import { CreateRepoModal } from "@/components/modals/CreateRepoModal";
 
 import { useDraggable, DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 
 export function Sidebar() {
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const {
         selectedRepositoryPath,
         setSelectedRepository,
@@ -83,12 +85,21 @@ export function Sidebar() {
                     {/* Repositories */}
                     <div className="px-0">
                         <div className="px-8 mt-2 mb-4 flex items-center justify-between">
-                            <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
-                                Repositories
-                            </h2>
-                            <span className="text-[10px] font-bold text-primary/40 px-2 py-0.5 bg-primary/5 rounded-none">
-                                {repositories.length}
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
+                                    Repositories
+                                </h2>
+                                <span className="text-[10px] font-bold text-primary/40 px-2 py-0.5 bg-primary/5 rounded-none">
+                                    {repositories.length}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="p-1.5 rounded-none hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all group"
+                                title="Create and Publish new repository"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
                         <div className="flex flex-col gap-0.5">
@@ -119,6 +130,7 @@ export function Sidebar() {
                     <div className="w-1.5 h-4 bg-primary rounded-none shadow-[0_0_12px_rgba(var(--primary),0.4)]" />
                 </footer>
             </aside>
+            <CreateRepoModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
         </DndContext>
     );
 }
