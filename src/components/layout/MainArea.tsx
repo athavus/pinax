@@ -690,16 +690,16 @@ function GitHubDiffView({ diff }: { diff: string }) {
                         key={idx}
                         className={cn(
                             "flex group min-h-[22px]",
-                            line.type === 'add' ? "bg-[#2ea0431a]" :
-                                line.type === 'delete' ? "bg-[#f851491a]" :
-                                    line.type === 'hunk' ? "bg-[#388bfd1a] border-y border-[#388bfd33] text-[#7d8590] sticky top-0 z-10" :
-                                        line.type === 'meta' ? "text-[#7d8590] bg-muted/5 opacity-40 px-6 py-2 border-y border-border/5 my-2" :
-                                            "hover:bg-[#1f242c]"
+                            line.type === 'add' ? "bg-emerald-500/10" :
+                                line.type === 'delete' ? "bg-rose-500/10" :
+                                    line.type === 'hunk' ? "bg-white/[0.04] border-y border-white/[0.08] text-muted-foreground/60 sticky top-0 z-10 backdrop-blur-md" :
+                                        line.type === 'meta' ? "text-muted-foreground/40 bg-white/[0.02] opacity-70 px-6 py-2 border-y border-white/[0.05] my-2" :
+                                            "hover:bg-white/[0.02] transition-colors"
                         )}
                     >
                         {/* Line Numbers Gutter */}
                         {line.type !== 'meta' && (
-                            <div className="w-28 shrink-0 flex select-none text-[#8b949e] border-r border-[#30363d] mr-4 bg-[#0d1117] group-hover:bg-[#1f242c] transition-colors">
+                            <div className="w-28 shrink-0 flex select-none text-muted-foreground/40 border-r border-white/[0.05] mr-4 bg-black/20 group-hover:bg-white/[0.04] transition-colors">
                                 <div className="w-14 text-right pr-3 py-0.5 font-mono text-[11px] opacity-60">
                                     {line.oldLine || ''}
                                 </div>
@@ -712,13 +712,13 @@ function GitHubDiffView({ diff }: { diff: string }) {
                         {/* Content */}
                         <div className={cn(
                             "flex-1 py-0.5 whitespace-pre pr-6 font-mono",
-                            line.type === 'add' ? "text-[#aff5b4] bg-[#2ea04333]" :
-                                line.type === 'delete' ? "text-[#ffdcd7] bg-[#f8514933]" :
-                                    line.type === 'hunk' ? "text-[#7d8590] font-bold py-1.5 px-2" :
+                            line.type === 'add' ? "text-emerald-400/90 bg-emerald-500/5" :
+                                line.type === 'delete' ? "text-rose-400/90 bg-rose-500/5" :
+                                    line.type === 'hunk' ? "text-muted-foreground/80 font-bold py-1.5 px-2" :
                                         line.type === 'meta' ? "italic text-[11px]" :
-                                            "text-[#c9d1d9]"
+                                            "text-foreground/90"
                         )}>
-                            <span className="inline-block w-6 opacity-30 select-none text-center font-mono">
+                            <span className="inline-block w-6 opacity-20 select-none text-center font-mono">
                                 {line.type === 'add' ? '+' : line.type === 'delete' ? '-' : ' '}
                             </span>
                             {(() => {
@@ -744,11 +744,11 @@ function highlightCode(code: string) {
     return (
         <>
             {parts.map((part, i) => {
-                if (keywords.test(part)) return <span key={i} className="text-[#ff7b72]">{part}</span>;
-                if (types.test(part)) return <span key={i} className="text-[#ffa657]">{part}</span>;
-                if (strings.test(part)) return <span key={i} className="text-[#a5d6ff]">{part}</span>;
-                if (comments.test(part)) return <span key={i} className="text-[#8b949e] italic">{part}</span>;
-                return <span key={i}>{part}</span>;
+                if (keywords.test(part)) return <span key={i} className="text-zinc-400 font-bold">{part}</span>;
+                if (types.test(part)) return <span key={i} className="text-zinc-500">{part}</span>;
+                if (strings.test(part)) return <span key={i} className="text-zinc-300 italic">{part}</span>;
+                if (comments.test(part)) return <span key={i} className="text-zinc-600 italic">{part}</span>;
+                return <span key={i} className="text-zinc-400/80">{part}</span>;
             })}
         </>
     );

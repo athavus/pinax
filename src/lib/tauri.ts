@@ -156,3 +156,17 @@ export async function createGithubRepository(
 export async function getGithubAvatars(remoteUrl: string, commitHashes: string[]): Promise<Record<string, string>> {
     return invoke("get_github_avatars", { remoteUrl, commitHashes });
 }
+
+export async function gitClone(url: string, path: string): Promise<void> {
+    return await invoke("git_clone", { url, path });
+}
+
+export async function generateTemplates(
+    path: string,
+    readme: boolean,
+    gitignore: string,
+    license: boolean,
+    repoName: string
+): Promise<void> {
+    return await invoke("generate_templates", { path, readme, gitignore, license, repoName });
+}

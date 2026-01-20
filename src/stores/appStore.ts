@@ -33,7 +33,9 @@ import {
     gitCherryPickCommit,
     gitInit,
     gitRemoteAdd,
-    gitRemoteSetUrl
+    gitRemoteSetUrl,
+    gitClone,
+    generateTemplates,
 } from "@/lib/tauri";
 
 interface AppState {
@@ -57,6 +59,12 @@ interface AppState {
     branches: Branch[];
     commits: CommitInfo[];
     error: string | null;
+
+    // Settings
+    settings: {
+        githubToken: string;
+        preferredEditor: string;
+    };
 
     // Actions
     setSelectedWorkspace: (id: string | null) => void;
@@ -89,13 +97,25 @@ interface AppState {
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
-    publishRepository: (localPath: string, name: string, token: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
+    publishRepository: (
+        localPath: string,
+        name: string,
+        token: string,
+        description: string | undefined,
+        isPrivate: boolean,
+        templates?: { readme: boolean; gitignore: string; license: boolean }
+    ) => Promise<void>;
+    cloneRepository: (url: string, localPath: string) => Promise<void>;
+    addLocalRepository: (localPath: string) => Promise<void>;
+    successAlert: { title: string; message: string } | null;
+    clearSuccessAlert: () => void;
     setNavigationContext: (context: NavigationContext) => void;
     loadWorkspaces: () => Promise<void>;
     scanForRepositories: (path: string) => Promise<void>;
     refreshRepositoryStatus: () => Promise<void>;
     pollRepositoryStatus: () => Promise<void>;
     clearError: () => void;
+    updateSettings: (settings: Partial<AppState["settings"]>) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -115,6 +135,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     branches: [],
     commits: [],
     error: null,
+    successAlert: null,
+
+    // Initial settings from localStorage
+    settings: {
+        githubToken: localStorage.getItem("github_token") || "",
+        preferredEditor: localStorage.getItem("preferred_editor") || "auto",
+    },
 
     // Actions
     setSelectedWorkspace: (id) => set({ selectedWorkspaceId: id }),
@@ -429,7 +456,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
-    publishRepository: async (localPath, name, token, description, isPrivate) => {
+    publishRepository: async (localPath, name, token, description, isPrivate, templates) => {
         set({ isLoading: true });
         try {
             // 1. Create GitHub repository
@@ -438,7 +465,18 @@ export const useAppStore = create<AppState>((set, get) => ({
             // 2. Initialize local repository if not already one
             await gitInit(localPath);
 
-            // 3. Add remote
+            // 3. Generate templates if requested
+            if (templates) {
+                await generateTemplates(
+                    localPath,
+                    templates.readme,
+                    templates.gitignore,
+                    templates.license,
+                    name
+                );
+            }
+
+            // 4. Add remote
             try {
                 await gitRemoteAdd(localPath, "origin", ghRepo.clone_url);
             } catch (e) {
@@ -446,31 +484,80 @@ export const useAppStore = create<AppState>((set, get) => ({
                 await gitRemoteSetUrl(localPath, "origin", ghRepo.clone_url);
             }
 
-            // 4. Initial commit and push (if there are files)
+            // 5. Initial commit and push (if there are files)
             const status = await getRepositoryStatus(localPath);
-            if (status.untracked.length > 0 || status.unstaged.length > 0) {
+            if (status.untracked.length > 0 || status.unstaged.length > 0 || (templates && (templates.readme || templates.gitignore !== "" || templates.license))) {
                 await gitCommit(localPath, "Initial commit from Pinax");
             }
 
             await gitPush(localPath);
 
-            // 5. Add to current workspace if needed, and select it
+            // 6. Add to current workspace if needed, and select it
             const workspaceId = get().selectedWorkspaceId || "uncategorized";
             await addRepositoryToWorkspace(workspaceId, localPath);
             await get().loadWorkspaces();
             await get().setSelectedRepository(localPath);
 
-            set({ isLoading: false });
-
-            // Alert success
-            setTimeout(() => {
-                alert(`Repository "${name}" published successfully to GitHub!`);
-            }, 100);
+            set({
+                isLoading: false,
+                successAlert: {
+                    title: "Repository Published",
+                    message: `Successfully created and published "${name}" to GitHub.`
+                }
+            });
         } catch (error) {
             set({ error: `Publish failed: ${error}`, isLoading: false });
             throw error;
         }
     },
+
+    cloneRepository: async (url, localPath) => {
+        set({ isLoading: true });
+        try {
+            await gitClone(url, localPath);
+
+            const workspaceId = get().selectedWorkspaceId || "uncategorized";
+            await addRepositoryToWorkspace(workspaceId, localPath);
+
+            await get().loadWorkspaces();
+            await get().setSelectedRepository(localPath);
+
+            set({
+                isLoading: false,
+                successAlert: {
+                    title: "Repository Cloned",
+                    message: `Successfully cloned repository to ${localPath}.`
+                }
+            });
+        } catch (error) {
+            set({ error: `Clone failed: ${error}`, isLoading: false });
+            throw error;
+        }
+    },
+
+    addLocalRepository: async (localPath) => {
+        set({ isLoading: true });
+        try {
+            const workspaceId = get().selectedWorkspaceId || "uncategorized";
+            await addRepositoryToWorkspace(workspaceId, localPath);
+
+            await get().loadWorkspaces();
+            await get().setSelectedRepository(localPath);
+
+            set({
+                isLoading: false,
+                successAlert: {
+                    title: "Repository Added",
+                    message: `Successfully added ${localPath} to your workspace.`
+                }
+            });
+        } catch (error) {
+            set({ error: `Failed to add repository: ${error}`, isLoading: false });
+            throw error;
+        }
+    },
+
+    clearSuccessAlert: () => set({ successAlert: null }),
 
     addRepositoryToWorkspace: async (workspaceId, repoPath) => {
         try {
@@ -569,4 +656,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     clearError: () => set({ error: null }),
+
+    updateSettings: (newSettings) => {
+        const currentSettings = get().settings;
+        const updatedSettings = { ...currentSettings, ...newSettings };
+
+        // Persist to localStorage
+        if (newSettings.githubToken !== undefined) {
+            localStorage.setItem("github_token", newSettings.githubToken);
+        }
+        if (newSettings.preferredEditor !== undefined) {
+            localStorage.setItem("preferred_editor", newSettings.preferredEditor);
+        }
+
+        set({ settings: updatedSettings });
+    },
 }));

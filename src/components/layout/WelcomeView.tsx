@@ -3,13 +3,14 @@
  */
 
 import { GitBranch, PlusCircle } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export function WelcomeView() {
     return (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-background/50 animate-in fade-in duration-700">
             <div className="relative mb-8">
-                <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-                <GitBranch className="w-20 h-20 text-primary relative z-10 opacity-80" />
+                <div className="absolute -inset-8 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+                <img src={logo} alt="Pinax Logo" className="w-32 h-32 relative z-10 drop-shadow-[0_0_30px_rgba(var(--primary),0.5)] object-contain" />
             </div>
 
             <h2 className="text-3xl font-bold tracking-tight mb-3">Welcome to Pinax</h2>

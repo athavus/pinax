@@ -5,22 +5,31 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
-import { FolderGit2, Check, Plus } from "lucide-react";
 import { Repository } from "@/types";
 import { WorkspaceSelect } from "@/components/workspace";
 import { useWorkspaceRepositories } from "@/hooks/useWorkspaceRepositories";
 import { homeDir } from "@tauri-apps/api/path";
 import { CreateRepoModal } from "@/components/modals/CreateRepoModal";
-
+import { CloneRepoModal } from "@/components/modals/CloneRepoModal";
+import { SettingsModal } from "@/components/modals/SettingsModal";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
+import { Globe, HardDrive, Plus, FolderGit2, Check, Settings } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { useDraggable, DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 
 export function Sidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const {
         selectedRepositoryPath,
         setSelectedRepository,
         scanForRepositories,
-        addRepositoryToWorkspace
+        addRepositoryToWorkspace,
+        addLocalRepository
     } = useAppStore();
 
     const sensors = useSensors(
@@ -68,14 +77,22 @@ export function Sidebar() {
             >
                 {/* Header with high impact */}
                 <header className="flex flex-col gap-4 px-6 pt-8 pb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-none bg-primary text-primary-foreground shadow-[0_4px_24px_rgba(var(--primary),0.3)] animate-pulse-slow">
-                            <FolderGit2 className="w-5 h-5 font-black" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-none bg-primary shadow-[0_4px_24px_rgba(var(--primary),0.3)] animate-pulse-slow flex items-center justify-center overflow-hidden">
+                                <img src={logo} alt="Pinax Logo" className="w-7 h-7 object-contain" />
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="font-bold text-2xl tracking-tight text-foreground leading-none">Pinax</h1>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80">Workbench</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <h1 className="font-bold text-2xl tracking-tight text-foreground leading-none">Pinax</h1>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80">Workbench</span>
-                        </div>
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="p-2 text-muted-foreground/20 hover:text-primary transition-all group"
+                        >
+                            <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" />
+                        </button>
                     </div>
                 </header>
 
@@ -84,7 +101,7 @@ export function Sidebar() {
 
                     {/* Repositories */}
                     <div className="px-0">
-                        <div className="px-8 mt-2 mb-4 flex items-center justify-between">
+                        <div className="px-8 mt-2 mb-4 flex items-center justify-between relative">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
                                     Repositories
@@ -93,13 +110,73 @@ export function Sidebar() {
                                     {repositories.length}
                                 </span>
                             </div>
-                            <button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="p-1.5 rounded-none hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all group"
-                                title="Create and Publish new repository"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                            </button>
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                    className="p-1.5 rounded-none hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all group"
+                                    title="Repository Actions"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                </button>
+
+                                {isMenuOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        />
+                                        <div className="absolute right-0 mt-3 w-64 bg-card border-none rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-3xl overflow-hidden ring-0 outline-none">
+                                            <button
+                                                onClick={() => {
+                                                    setIsCreateModalOpen(true);
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                            >
+                                                <Plus className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">New Project</span>
+                                                    <span className="text-[9px] opacity-20 font-black uppercase tracking-[0.2em]">Initialize Repo</span>
+                                                </div>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setIsCloneModalOpen(true);
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                            >
+                                                <Globe className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Clone Repo</span>
+                                                    <span className="text-[9px] opacity-20 font-black uppercase tracking-[0.2em]">Download remote</span>
+                                                </div>
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    setIsMenuOpen(false);
+                                                    const selected = await open({
+                                                        directory: true,
+                                                        multiple: false,
+                                                        title: "Add Existing Repository"
+                                                    });
+                                                    if (selected) {
+                                                        await addLocalRepository(selected as string);
+                                                    }
+                                                }}
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                            >
+                                                <HardDrive className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Add Existing</span>
+                                                    <span className="text-[9px] opacity-20 font-black uppercase tracking-[0.2em]">Link local folder</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex flex-col gap-0.5">
@@ -131,6 +208,11 @@ export function Sidebar() {
                 </footer>
             </aside>
             <CreateRepoModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
+            <CloneRepoModal open={isCloneModalOpen} onOpenChange={setIsCloneModalOpen} />
+            <SettingsModal
+                open={isSettingsOpen}
+                onOpenChange={setIsSettingsOpen}
+            />
         </DndContext>
     );
 }
@@ -154,7 +236,7 @@ import {
 } from "@/components/ui/context-menu"
 
 function RepositoryItem({ repository, isSelected, isFocused, onClick }: RepositoryItemProps) {
-    const { workspaces, addRepositoryToWorkspace } = useAppStore();
+    const { workspaces, addRepositoryToWorkspace, settings: appSettings } = useAppStore();
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: repository.path,
     });
@@ -191,21 +273,65 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                     </button>
                 </li>
             </ContextMenuTrigger>
-            <ContextMenuContent className="w-48">
-                <ContextMenuItem>Open in Terminal</ContextMenuItem>
-                <ContextMenuItem>Copy Path</ContextMenuItem>
+            <ContextMenuContent className="w-56 bg-zinc-900 border-border rounded-none shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100">
+                <ContextMenuItem
+                    onClick={async () => {
+                        try {
+                            // Using standard browser clipboard API
+                            await navigator.clipboard.writeText(repository.path);
+                        } catch (err) {
+                            console.error("Failed to copy path:", err);
+                        }
+                    }}
+                    className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4"
+                >
+                    Copy Path
+                </ContextMenuItem>
+                <ContextMenuItem
+                    onClick={() => {
+                        // In Linux, we can often use xdg-open to open a terminal or a script
+                        // But usually Tauri Shell is better if configured. 
+                        // For now we'll call a hypothetical backend command or use standard tauri shell if available
+                        invoke("open_terminal", { path: repository.path }).catch(console.error);
+                    }}
+                    className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4"
+                >
+                    Open in Terminal
+                </ContextMenuItem>
+                <ContextMenuItem
+                    onClick={() => {
+                        invoke("open_in_editor", {
+                            path: repository.path,
+                            preferredEditor: appSettings.preferredEditor
+                        }).catch(console.error);
+                    }}
+                    className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4"
+                >
+                    Open in Editor
+                </ContextMenuItem>
+                <ContextMenuItem
+                    onClick={() => {
+                        invoke("open_file_manager", { path: repository.path }).catch(console.error);
+                    }}
+                    className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4"
+                >
+                    Open in File Manager
+                </ContextMenuItem>
+                <div className="h-px bg-white/5 my-1.5" />
                 <ContextMenuSub>
-                    <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer">Move to Workspace</ContextMenuSubTrigger>
+                    <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4">
+                        Move to Workspace
+                    </ContextMenuSubTrigger>
                     <ContextMenuPortal>
-                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-border rounded-none shadow-2xl">
+                        <ContextMenuSubContent className="min-w-[240px] bg-zinc-900 border-border rounded-none shadow-2xl p-1.5">
                             {workspaces.length === 0 ? (
-                                <ContextMenuItem disabled className="py-2.5 text-xs font-bold px-4">No workspaces</ContextMenuItem>
+                                <ContextMenuItem disabled className="py-2.5 text-[11px] font-black uppercase tracking-widest px-4 opacity-20">No workspaces</ContextMenuItem>
                             ) : (
                                 workspaces.map(ws => (
                                     <ContextMenuItem
                                         key={ws.id}
                                         onClick={() => addRepositoryToWorkspace(ws.id, repository.path)}
-                                        className="py-2.5 text-xs font-mono font-bold cursor-pointer truncate px-4"
+                                        className="py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer truncate px-4 hover:bg-primary hover:text-primary-foreground"
                                     >
                                         {ws.name}
                                     </ContextMenuItem>

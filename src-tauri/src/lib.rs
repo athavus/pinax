@@ -167,6 +167,67 @@ async fn git_remote_set_url(path: String, name: String, url: String) -> Result<(
     git::remote_set_url(Path::new(&path), &name, &url).await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn git_clone(url: String, path: String) -> Result<(), String> {
+    git::clone(&url, Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn generate_templates(
+    path: String, 
+    readme: bool, 
+    gitignore: String, 
+    license: bool,
+    repo_name: String
+) -> Result<(), String> {
+    let path = Path::new(&path);
+    
+    if readme {
+        let content = format!("# {}\n\nInitial repository created with Pinax.", repo_name);
+        std::fs::write(path.join("README.md"), content).map_err(|e| e.to_string())?;
+    }
+    
+    if !gitignore.is_empty() {
+        let content = match gitignore.to_lowercase().as_str() {
+            "node" => "node_modules/\ndist/\n.env\n",
+            "python" => "__pycache__/\n*.py[cod]\nvenv/\n",
+            "rust" => "target/\nCargo.lock\n",
+            _ => "node_modules/\ntarget/\nbuild/\ndist/\n.env\n.DS_Store\n",
+        };
+        std::fs::write(path.join(".gitignore"), content).map_err(|e| e.to_string())?;
+    }
+    
+    if license {
+        let content = format!(
+"MIT License
+
+Copyright (c) {} Pinax User
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the \"Software\"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.", 
+            chrono::Utc::now().format("%Y")
+        );
+        std::fs::write(path.join("LICENSE"), content).map_err(|e| e.to_string())?;
+    }
+    
+    Ok(())
+}
+
 // ============== GitHub Commands ==============
 
 #[tauri::command]
@@ -183,6 +244,82 @@ async fn get_github_avatars(remote_url: String, commit_hashes: Vec<String>) -> R
     tauri::async_runtime::spawn_blocking(move || {
         Ok(github::get_commit_avatars(&remote_url, commit_hashes))
     }).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn open_terminal(path: String) -> Result<(), String> {
+    let terminals = vec![
+        ("gnome-terminal", vec!["--working-directory", &path]),
+        ("konsole", vec!["--workdir", &path]),
+        ("xfce4-terminal", vec!["--working-directory", &path]),
+        ("terminator", vec!["--working-directory", &path]),
+        ("kitty", vec!["--directory", &path]),
+        ("alacritty", vec!["--working-directory", &path]),
+        ("x-terminal-emulator", vec![]),
+    ];
+
+    for (cmd, args) in terminals {
+        if std::process::Command::new(cmd).args(args).spawn().is_ok() {
+            return Ok(());
+        }
+    }
+    
+    Err("No suitable terminal emulator found. Please install gnome-terminal, konsole, or xfce4-terminal.".into())
+}
+
+#[tauri::command]
+async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Result<(), String> {
+    let mut editors = vec![
+        ("code", vec![&path]),
+        ("subl", vec![&path]),
+        ("zed", vec![&path]),
+        ("gedit", vec![&path]),
+        ("kwrite", vec![&path]),
+        ("xed", vec![&path]),
+        ("mousepad", vec![&path]),
+        ("kate", vec![&path]),
+    ];
+
+    // If a preferred editor is specified and not "auto", move it to the front
+    if let Some(ref pref) = preferred_editor {
+        if pref != "auto" && !pref.is_empty() {
+            // Find if we already have it in our list to reuse args
+            if let Some(pos) = editors.iter().position(|(cmd, _)| cmd == pref) {
+                let item = editors.remove(pos);
+                editors.insert(0, item);
+            } else {
+                // Not in our list, add it as a raw command
+                // We'll assume a single argument for the path is standard
+                // This is a bit risky but fallback will catch it
+            }
+        }
+    }
+
+    for (cmd, args) in editors {
+        if std::process::Command::new(cmd).args(args).spawn().is_ok() {
+            return Ok(());
+        }
+    }
+
+    // Last resort fallback
+    if let Some(ref pref) = preferred_editor {
+        if pref != "auto" && !pref.is_empty() {
+             if std::process::Command::new(pref).arg(&path).spawn().is_ok() {
+                return Ok(());
+             }
+        }
+    }
+
+    Err("No suitable code editor found. Please install VS Code, Sublime Text, or Gedit.".into())
+}
+
+#[tauri::command]
+async fn open_file_manager(path: String) -> Result<(), String> {
+    std::process::Command::new("xdg-open")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 // ============== App Entry Point ==============
@@ -222,6 +359,10 @@ pub fn run() {
             git_init,
             git_remote_add,
             git_remote_set_url,
+            git_clone,
+            open_terminal,
+            open_in_editor,
+            open_file_manager,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
