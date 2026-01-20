@@ -15,7 +15,7 @@ import { SettingsModal } from "@/components/modals/SettingsModal";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { Globe, HardDrive, Plus, FolderGit2, Check, Settings } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/whitelogo.png";
 import { useDraggable, DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 
 export function Sidebar() {
@@ -75,16 +75,15 @@ export function Sidebar() {
                     "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
                 )}
             >
-                {/* Header with high impact */}
                 <header className="flex flex-col gap-4 px-6 pt-8 pb-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-none bg-primary shadow-[0_4px_24px_rgba(var(--primary),0.3)] animate-pulse-slow flex items-center justify-center overflow-hidden">
-                                <img src={logo} alt="Pinax Logo" className="w-7 h-7 object-contain" />
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-none bg-primary/5 flex items-center justify-center overflow-hidden">
+                                <img src={logo} alt="pinax logo" className="w-12 h-12 object-contain" />
                             </div>
                             <div className="flex flex-col">
-                                <h1 className="font-bold text-2xl tracking-tight text-foreground leading-none">Pinax</h1>
-                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80">Workbench</span>
+                                <h1 className="font-bold text-2xl tracking-tighter text-foreground leading-none">pinax</h1>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80 leading-none">git-workbench</span>
                             </div>
                         </div>
                         <button
