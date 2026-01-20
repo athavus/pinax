@@ -36,3 +36,35 @@ pub async fn get_history(repo_path: &Path) -> GitResult<Vec<CommitInfo>> {
 
     Ok(commits)
 }
+
+/// Get files changed in a specific commit
+pub async fn get_commit_files(repo_path: &Path, commit_hash: &str) -> GitResult<Vec<super::types::FileChange>> {
+    let output = execute_string(
+        repo_path,
+        &["show", "--name-status", "--oneline", commit_hash]
+    ).await?;
+
+    let mut changes = Vec::new();
+    // First line is commit info, skip it
+    for line in output.lines().skip(1) {
+        if line.is_empty() { continue; }
+        
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 2 { continue; }
+
+        let status_code = parts[0].chars().next().unwrap_or('M');
+        let path = parts[1].to_string();
+
+        let status = match status_code {
+            'A' => super::types::FileStatus::Added,
+            'D' => super::types::FileStatus::Deleted,
+            'R' => super::types::FileStatus::Renamed,
+            'C' => super::types::FileStatus::Copied,
+            _ => super::types::FileStatus::Modified,
+        };
+
+        changes.push(super::types::FileChange { path, status });
+    }
+
+    Ok(changes)
+}

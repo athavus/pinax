@@ -66,6 +66,9 @@ export function MainArea() {
         revertCommit,
         resetToCommit,
         cherryPickCommit,
+        selectedCommitHash,
+        selectedCommitFiles,
+        loadCommitFiles,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -164,18 +167,18 @@ export function MainArea() {
     }
 
     return (
-        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/10 rounded-none m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
+        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/10 rounded-[2.5rem] m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
             {/* Global Error Notification */}
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-500">
-                    <div className="bg-destructive/10 backdrop-blur-xl border border-destructive/20 px-6 py-3 rounded-none flex items-center gap-4 shadow-2xl">
-                        <div className="p-2 rounded-none bg-destructive/20 text-destructive">
+                    <div className="bg-destructive/10 backdrop-blur-xl border border-destructive/20 px-6 py-3 rounded-2xl flex items-center gap-4 shadow-2xl">
+                        <div className="p-2 rounded-xl bg-destructive/20 text-destructive">
                             <RefreshCw className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-bold text-destructive/90">{error}</span>
                         <button
                             onClick={clearError}
-                            className="ml-2 p-1 hover:bg-destructive/20 rounded-md transition-colors text-destructive"
+                            className="ml-2 p-1 hover:bg-destructive/20 rounded-lg transition-colors text-destructive"
                         >
                             <Check className="w-4 h-4" />
                         </button>
@@ -204,7 +207,7 @@ export function MainArea() {
                         <button
                             onClick={() => setBranchSelectorOpen(!branchSelectorOpen)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-transparent hover:bg-primary/20 transition-all rounded-none group",
+                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-transparent hover:bg-primary/20 transition-all rounded-xl group",
                                 branchSelectorOpen && "ring-2 ring-primary/30 bg-primary/20"
                             )}
                         >
@@ -219,7 +222,7 @@ export function MainArea() {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setBranchSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-border shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-none overflow-hidden flex flex-col">
+                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-border shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-2xl overflow-hidden flex flex-col">
                                     {/* Tabs (Branches / Pull Requests) */}
                                     <div className="flex border-b border-border/10 bg-muted/40 h-12">
                                         <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
@@ -304,7 +307,7 @@ export function MainArea() {
                                     </div>
 
                                     <div className="p-4 border-t border-border/10 bg-muted/40">
-                                        <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-none text-primary/80">
+                                        <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-xl text-primary/80">
                                             <GitBranch className="w-4 h-4" />
                                             Merge into <strong>{repositoryStatus?.branch || "main"}</strong>
                                         </button>
@@ -322,7 +325,7 @@ export function MainArea() {
                             onClick={fetch}
                             disabled={isFetching}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isFetching && "animate-pulse"
                             )}
                         >
@@ -333,7 +336,7 @@ export function MainArea() {
                             onClick={pull}
                             disabled={isPulling}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isPulling && "animate-pulse"
                             )}
                         >
@@ -349,7 +352,7 @@ export function MainArea() {
                             onClick={push}
                             disabled={isPushing}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isPushing && "animate-pulse"
                             )}
                         >
@@ -427,9 +430,10 @@ export function MainArea() {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+                            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
                                 {commits.length > 0 ? (
                                     commits.map((commit, index) => {
+                                        const isSelected = selectedCommitHash === commit.hash;
                                         let dateStr = "Unknown Date";
                                         try {
                                             const d = new Date(commit.timestamp);
@@ -444,7 +448,11 @@ export function MainArea() {
                                             <ContextMenu key={commit.hash}>
                                                 <ContextMenuTrigger asChild>
                                                     <div
-                                                        className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-none transition-all group border border-transparent hover:border-border/10 relative cursor-context-menu"
+                                                        onClick={() => loadCommitFiles(commit.hash)}
+                                                        className={cn(
+                                                            "w-full flex flex-col gap-1.5 px-4 py-3 rounded-xl transition-all group border border-transparent hover:border-border/10 relative cursor-pointer",
+                                                            isSelected ? "bg-primary/10 border-primary/20" : "hover:bg-primary/5"
+                                                        )}
                                                     >
                                                         <div className="flex items-center justify-between gap-4">
                                                             <div className="flex items-center gap-3">
@@ -561,7 +569,7 @@ export function MainArea() {
                             value={commitMessage}
                             onChange={(e) => setCommitMessage(e.target.value)}
                             placeholder="Briefly describe your changes..."
-                            className="w-full min-h-[100px] p-4 text-sm border border-border/10 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-none font-medium shadow-inner"
+                            className="w-full min-h-[100px] p-4 text-sm border border-border/10 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-xl font-medium shadow-inner"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                                     handleCommit();
@@ -573,7 +581,7 @@ export function MainArea() {
                                 onClick={handleCommit}
                                 disabled={!commitMessage.trim() || isLoading}
                                 className={cn(
-                                    "w-full py-3 bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 rounded-none flex items-center justify-center gap-2 group relative overflow-hidden",
+                                    "w-full py-3 bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 rounded-xl flex items-center justify-center gap-2 group relative overflow-hidden",
                                     isCommitted && "brightness-110"
                                 )}
                             >
@@ -589,6 +597,37 @@ export function MainArea() {
                         </div>
                     </div>
                 </div>
+
+                {/* Optional middle column for commit details (files list) */}
+                {activeTab === "history" && selectedCommitHash && (
+                    <div className="w-64 border-r border-border/10 flex flex-col bg-card/60 animate-in slide-in-from-left duration-300">
+                        <div className="h-14 flex items-center px-6 border-b border-border/10">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                {selectedCommitFiles.length} Changed Files
+                            </span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+                            {selectedCommitFiles.map(file => (
+                                <button
+                                    key={file.path}
+                                    onClick={() => setSelectedFile(file.path)}
+                                    className={cn(
+                                        "w-full text-left px-4 py-2 text-[11px] rounded-lg transition-all flex items-center gap-3 group",
+                                        selectedFile === file.path ? "bg-primary text-primary-foreground font-bold" : "hover:bg-primary/10 text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full",
+                                        file.status === "added" ? "bg-green-500" :
+                                            file.status === "deleted" ? "bg-red-500" : "bg-blue-400"
+                                    )} />
+                                    <span className="truncate">{file.path.split('/').pop()}</span>
+                                    <span className="ml-auto opacity-0 group-hover:opacity-20 text-[8px] font-mono">{file.status.charAt(0).toUpperCase()}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex-1 bg-background flex flex-col overflow-hidden">
                     {selectedFile ? (

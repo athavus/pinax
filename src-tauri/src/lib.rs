@@ -46,6 +46,14 @@ async fn get_git_history(path: String) -> Result<Vec<git::CommitInfo>, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Get files changed in a commit
+#[tauri::command]
+async fn get_commit_files(path: String, hash: String) -> Result<Vec<git::FileChange>, String> {
+    git::get_commit_files(Path::new(&path), &hash)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Get all workspaces
 #[tauri::command]
 async fn get_workspaces() -> Result<Vec<Workspace>, String> {
@@ -354,6 +362,7 @@ pub fn run() {
             git_discard_changes,
             git_add_to_gitignore,
             get_git_history,
+            get_commit_files,
             create_github_repository,
             get_github_avatars,
             git_init,

@@ -75,23 +75,23 @@ export function Sidebar() {
                     "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
                 )}
             >
-                <header className="flex flex-col gap-4 px-6 pt-8 pb-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-none bg-primary/5 flex items-center justify-center overflow-hidden">
-                                <img src={logo} alt="pinax logo" className="w-12 h-12 object-contain" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <h1 className="font-bold text-2xl tracking-tighter text-foreground leading-none">pinax</h1>
-                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80 leading-none">git-workbench</span>
-                            </div>
+                <header className="flex flex-col gap-4 px-6 pt-6 pb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden transition-all hover:bg-primary/10">
+                            <img src={logo} alt="pinax logo" className="w-12 h-12 object-contain" />
                         </div>
-                        <button
-                            onClick={() => setIsSettingsOpen(true)}
-                            className="p-2 text-muted-foreground/20 hover:text-primary transition-all group"
-                        >
-                            <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" />
-                        </button>
+                        <div className="flex flex-col justify-center">
+                            <h1 className="font-bold text-2xl tracking-tighter text-foreground leading-none">pinax</h1>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80 leading-none">git-workbench</span>
+                        </div>
+                        <div className="ml-auto">
+                            <button
+                                onClick={() => setIsSettingsOpen(true)}
+                                className="p-2 text-muted-foreground/20 hover:text-primary transition-all group hover:bg-primary/5 rounded-xl"
+                            >
+                                <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" />
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -254,9 +254,9 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                         className={cn(
                             "w-full flex items-center gap-4 px-8 py-2.5 text-left outline-none transition-all duration-300 border-l-4",
                             isSelected
-                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-none"
-                                : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30",
-                            isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20"
+                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-xl"
+                                : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30 hover:rounded-xl",
+                            isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20 rounded-xl"
                         )}
                     >
                         <FolderGit2 className={cn(

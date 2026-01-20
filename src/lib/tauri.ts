@@ -4,7 +4,7 @@
  */
 
 import { invoke } from "@tauri-apps/api/core";
-import type { Repository, RepositoryStatus, Branch, Workspace, GitHubRepo, CommitInfo } from "@/types";
+import type { Repository, RepositoryStatus, Branch, Workspace, GitHubRepo, CommitInfo, FileChange } from "@/types";
 
 /**
  * Scan a directory recursively to find Git repositories
@@ -95,6 +95,10 @@ export async function getFileDiff(path: string, filePath: string): Promise<strin
 
 export async function getGitHistory(path: string): Promise<CommitInfo[]> {
     return invoke<CommitInfo[]>("get_git_history", { path });
+}
+
+export async function getCommitFiles(path: string, hash: string): Promise<FileChange[]> {
+    return invoke<FileChange[]>("get_commit_files", { path, hash });
 }
 
 export async function gitDiscardChanges(path: string, filePath: string): Promise<void> {

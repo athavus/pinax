@@ -4,7 +4,7 @@
  */
 
 import { create } from "zustand";
-import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch, CommitInfo } from "@/types";
+import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch, CommitInfo, FileChange } from "@/types";
 import {
     getRepositoryStatus,
     getWorkspaces,
@@ -58,6 +58,9 @@ interface AppState {
     isPushing: boolean;
     branches: Branch[];
     commits: CommitInfo[];
+    selectedCommitHash: string | null;
+    selectedCommitFiles: FileChange[];
+    hiddenRepositories: string[];
     error: string | null;
 
     // Settings
@@ -74,6 +77,7 @@ interface AppState {
     setSelectedFile: (path: string | null) => Promise<void>;
     addRepositoryToWorkspace: (workspaceId: string, repoPath: string) => Promise<void>;
     hideRepository: (path: string) => void;
+    loadCommitFiles: (hash: string) => Promise<void>;
 
     // Git Operations
     fetch: () => Promise<void>;
@@ -134,6 +138,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     isPushing: false,
     branches: [],
     commits: [],
+    selectedCommitHash: null,
+    selectedCommitFiles: [],
+    hiddenRepositories: JSON.parse(localStorage.getItem("hidden_repositories") || "[]"),
     error: null,
     successAlert: null,
 
@@ -569,10 +576,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     hideRepository: (path) => {
-        console.log("Hiding repository:", path);
-        // This is a stub for now, pending actual implementation of hiding logic if needed
-        // Or if it was intended to just remove from view, maybe we need a 'hiddenRepositories' state
-        // For now, implementing to satisfy interface
+        const { hiddenRepositories } = get();
+        if (!hiddenRepositories.includes(path)) {
+            const newHidden = [...hiddenRepositories, path];
+            set({ hiddenRepositories: newHidden });
+            localStorage.setItem("hidden_repositories", JSON.stringify(newHidden));
+        }
+    },
+
+    loadCommitFiles: async (hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ selectedCommitHash: hash, isLoading: true });
+        try {
+            const { getCommitFiles } = await import("@/lib/tauri");
+            const files = await getCommitFiles(selectedRepositoryPath, hash);
+            set({ selectedCommitFiles: files, isLoading: false });
+        } catch (error) {
+            set({ error: `Failed to load commit files: ${error}`, isLoading: false });
+        }
     },
 
 
