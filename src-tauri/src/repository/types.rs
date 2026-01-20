@@ -13,11 +13,4 @@ pub struct Repository {
     pub last_commit: Option<CommitInfo>,
 }
 
-/// Repository metadata used for caching
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RepositoryMetadata {
-    pub path: String,
-    pub name: String,
-    pub remote_url: Option<String>,
-    pub last_modified: u64,
-}
+

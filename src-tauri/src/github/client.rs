@@ -22,6 +22,7 @@ pub struct GitHubRepo {
 
 #[derive(Debug, Deserialize)]
 struct GitHubUser {
+    login: Option<String>,
     avatar_url: String,
 }
 
@@ -50,7 +51,7 @@ pub fn create_repo(token: &str, name: &str, description: Option<String>, private
 
     let response = client
         .post("https://api.github.com/user/repos")
-        .headers(headers)
+        .headers(headers.clone())
         .json(&payload)
         .send()
         .map_err(|e| e.to_string())?;
@@ -58,6 +59,35 @@ pub fn create_repo(token: &str, name: &str, description: Option<String>, private
     if !response.status().is_success() {
         let status = response.status();
         let text = response.text().unwrap_or_default();
+        
+        // Handle "Repository already exists" error (422 Unprocessable Entity)
+        if status.as_u16() == 422 && text.contains("name already exists") {
+            // Fetch the authenticated user to get their login
+            let user_response = client
+                .get("https://api.github.com/user")
+                .headers(headers.clone())
+                .send()
+                .map_err(|e| format!("Failed to fetch user for recovery: {}", e))?;
+                
+            if user_response.status().is_success() {
+                let user: GitHubUser = user_response.json().map_err(|e| e.to_string())?;
+                if let Some(login) = user.login {
+                    // Try to fetch the existing repository
+                    let repo_url = format!("https://api.github.com/repos/{}/{}", login, name);
+                    let repo_response = client
+                        .get(&repo_url)
+                        .headers(headers)
+                        .send()
+                        .map_err(|e| e.to_string())?;
+                        
+                    if repo_response.status().is_success() {
+                        let repo = repo_response.json::<GitHubRepo>().map_err(|e| e.to_string())?;
+                        return Ok(repo);
+                    }
+                }
+            }
+        }
+        
         return Err(format!("GitHub API error ({}): {}", status, text));
     }
 

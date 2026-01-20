@@ -381,6 +381,7 @@ pub fn run() {
             open_terminal,
             open_in_editor,
             open_file_manager,
+            generate_templates,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -36,7 +36,16 @@ pub async fn get_status(repo_path: &Path) -> GitResult<RepositoryStatus> {
 
 /// Get the current branch name
 async fn get_current_branch(repo_path: &Path) -> GitResult<String> {
-    execute_string(repo_path, &["rev-parse", "--abbrev-ref", "HEAD"]).await
+    match execute_string(repo_path, &["rev-parse", "--abbrev-ref", "HEAD"]).await {
+        Ok(branch) => Ok(branch),
+        Err(e) => {
+            // Handle empty repository (no commits yet)
+            if e.to_string().contains("ambiguous argument 'HEAD'") || e.to_string().contains("unknown revision") {
+                return Ok("No Branch".to_string());
+            }
+            Err(e)
+        }
+    }
 }
 
 /// Get ahead/behind counts from upstream

@@ -32,14 +32,6 @@ pub struct WorkspaceConfig {
     pub workspaces: Vec<Workspace>,
 }
 
-impl WorkspaceConfig {
-    pub fn new() -> Self {
-        Self {
-            version: 1,
-            workspaces: Vec::new(),
-        }
-    }
-}
 
 /// Get current timestamp as ISO string (simplified without chrono dependency)
 fn chrono_now() -> String {
