@@ -46,7 +46,6 @@ interface AppState {
     selectedFileDiff: string | null;
 
     // UI state
-    commandPaletteOpen: boolean;
     navigationContext: NavigationContext;
     isLoading: boolean;
     isFetching: boolean;
@@ -88,7 +87,6 @@ interface AppState {
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
 
-    toggleCommandPalette: () => void;
     setNavigationContext: (context: NavigationContext) => void;
     loadWorkspaces: () => Promise<void>;
     scanForRepositories: (path: string) => Promise<void>;
@@ -106,7 +104,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     repositoryStatus: null,
     selectedFile: null,
     selectedFileDiff: null,
-    commandPaletteOpen: false,
     navigationContext: "sidebar",
     isLoading: false,
     isFetching: false,
@@ -445,8 +442,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         // For now, implementing to satisfy interface
     },
 
-    toggleCommandPalette: () =>
-        set((state) => ({ commandPaletteOpen: !state.commandPaletteOpen })),
 
     setNavigationContext: (context) => set({ navigationContext: context }),
 

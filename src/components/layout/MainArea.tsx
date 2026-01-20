@@ -339,6 +339,11 @@ export function MainArea() {
                         >
                             <ArrowDown className={cn("w-3 h-3", isPulling && "animate-bounce")} />
                             <span className="hidden md:inline">Pull</span>
+                            {repositoryStatus && repositoryStatus.behind > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 bg-primary/20 text-primary rounded-full text-[9px] font-black">
+                                    {repositoryStatus.behind}
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={push}
@@ -350,6 +355,11 @@ export function MainArea() {
                         >
                             <Upload className={cn("w-3 h-3", isPushing && "animate-bounce")} />
                             <span className="hidden md:inline">Push</span>
+                            {repositoryStatus && repositoryStatus.ahead > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 bg-primary text-primary-foreground rounded-full text-[9px] font-black">
+                                    {repositoryStatus.ahead}
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>

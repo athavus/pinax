@@ -3,19 +3,13 @@
     "bindings": [
         {
             "key": "mod+p",
-            "command": "command-palette.toggle",
-            "description": "Toggle command palette"
+            "command": "repository.push",
+            "description": "Push commits to remote"
         },
         {
-            "key": "mod+k",
-            "command": "command-palette.toggle",
-            "description": "Toggle command palette (alternative)"
-        },
-        {
-            "key": "escape",
-            "command": "modal.close",
-            "when": "modalOpen",
-            "description": "Close any open modal"
+            "key": "mod+shift+p",
+            "command": "repository.pull",
+            "description": "Pull commits from remote"
         },
         {
             "key": "mod+r",
@@ -26,24 +20,6 @@
             "key": "mod+shift+e",
             "command": "sidebar.focus",
             "description": "Focus the sidebar"
-        },
-        {
-            "key": "j",
-            "command": "navigation.down",
-            "when": "listFocused",
-            "description": "Navigate down in list"
-        },
-        {
-            "key": "k",
-            "command": "navigation.up",
-            "when": "listFocused",
-            "description": "Navigate up in list"
-        },
-        {
-            "key": "enter",
-            "command": "item.select",
-            "when": "listFocused",
-            "description": "Select current item"
         },
         {
             "key": "mod+1",

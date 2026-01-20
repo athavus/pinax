@@ -66,7 +66,7 @@ export interface Command {
     execute: () => void;
 }
 
-export type NavigationContext = "sidebar" | "main" | "command-palette";
+export type NavigationContext = "sidebar" | "main";
 
 export interface GitHubRepo {
     id: number;

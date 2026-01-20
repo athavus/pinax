@@ -2,7 +2,7 @@
  * Sidebar component with workspace and repository navigation
  */
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
 import { FolderGit2, Check } from "lucide-react";
@@ -17,8 +17,6 @@ export function Sidebar() {
     const {
         selectedRepositoryPath,
         setSelectedRepository,
-        setNavigationContext,
-        navigationContext,
         scanForRepositories,
         addRepositoryToWorkspace
     } = useAppStore();
@@ -42,38 +40,6 @@ export function Sidebar() {
     // Filter repos by workspace
     const repositories = useWorkspaceRepositories();
 
-    const [focusedIndex, setFocusedIndex] = useState(0);
-
-    // Handle vim-style navigation
-    useEffect(() => {
-        const handleNavigate = (e: CustomEvent<"up" | "down">) => {
-            if (navigationContext !== "sidebar") return;
-
-            setFocusedIndex((prev) => {
-                if (e.detail === "down") {
-                    return Math.min(prev + 1, repositories.length - 1);
-                } else {
-                    return Math.max(prev - 1, 0);
-                }
-            });
-        };
-
-        const handleSelect = () => {
-            if (navigationContext !== "sidebar") return;
-            if (repositories[focusedIndex]) {
-                setSelectedRepository(repositories[focusedIndex].path);
-            }
-        };
-
-        window.addEventListener("pinax:navigate", handleNavigate as EventListener);
-        window.addEventListener("pinax:select", handleSelect);
-
-        return () => {
-            window.removeEventListener("pinax:navigate", handleNavigate as EventListener);
-            window.removeEventListener("pinax:select", handleSelect);
-        };
-    }, [navigationContext, focusedIndex, repositories, setSelectedRepository]);
-
     // Scan for repos on mount
     useEffect(() => {
         const initScan = async () => {
@@ -93,7 +59,6 @@ export function Sidebar() {
             <aside
                 data-sidebar
                 tabIndex={0}
-                onFocus={() => setNavigationContext("sidebar")}
                 className={cn(
                     "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border/40",
                     "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
