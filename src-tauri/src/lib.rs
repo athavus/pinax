@@ -127,6 +127,32 @@ async fn git_add_to_gitignore(path: String, file_path: String) -> Result<(), Str
     git::add_to_gitignore(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
 }
 
+
+#[tauri::command]
+async fn git_create_branch_from_commit(path: String, branch: String, hash: String) -> Result<(), String> {
+    git::create_branch_from_commit(Path::new(&path), &branch, &hash).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_checkout_commit(path: String, hash: String) -> Result<(), String> {
+    git::checkout_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_revert_commit(path: String, hash: String) -> Result<(), String> {
+    git::revert_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_reset_to_commit(path: String, hash: String) -> Result<(), String> {
+    git::reset_to_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_cherry_pick_commit(path: String, hash: String) -> Result<(), String> {
+    git::cherry_pick_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
+}
+
 // ============== GitHub Commands ==============
 
 #[tauri::command]
@@ -157,6 +183,11 @@ pub fn run() {
             git_commit,
             git_checkout,
             git_create_branch,
+            git_create_branch_from_commit,
+            git_checkout_commit,
+            git_revert_commit,
+            git_reset_to_commit,
+            git_cherry_pick_commit,
             git_undo_commit,
             git_resolve_conflict,
             get_file_diff,

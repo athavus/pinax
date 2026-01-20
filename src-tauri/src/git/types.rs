@@ -67,5 +67,6 @@ pub struct CommitInfo {
     pub short_hash: String,
     pub message: String,
     pub author: String,
+    pub email: String,
     pub timestamp: String,
 }

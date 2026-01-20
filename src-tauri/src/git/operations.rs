@@ -174,3 +174,49 @@ pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
     
     Ok(())
 }
+
+/// Create a branch from a specific commit
+pub async fn create_branch_from_commit(path: &Path, branch_name: &str, hash: &str) -> GitResult<()> {
+    execute(path, &["branch", branch_name, hash]).await?;
+    Ok(())
+}
+
+/// Checkout a specific commit (detached HEAD)
+pub async fn checkout_commit(path: &Path, hash: &str) -> GitResult<()> {
+    execute(path, &["checkout", hash]).await?;
+    Ok(())
+}
+
+/// Revert a specific commit
+pub async fn revert_commit(path: &Path, hash: &str) -> GitResult<()> {
+    // --no-edit avoids opening the editor
+    let output = execute(path, &["revert", "--no-edit", hash]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("revert {}", hash),
+        });
+    }
+    Ok(())
+}
+
+/// Reset to a specific commit (mixed reset by default to preserve working tree)
+pub async fn reset_to_commit(path: &Path, hash: &str) -> GitResult<()> {
+    // Using mixed reset to keep changes in working directory but unstage them
+    execute(path, &["reset", hash]).await?;
+    Ok(())
+}
+
+/// Cherry-pick a commit
+pub async fn cherry_pick_commit(path: &Path, hash: &str) -> GitResult<()> {
+    let output = execute(path, &["cherry-pick", hash]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("cherry-pick {}", hash),
+        });
+    }
+    Ok(())
+}

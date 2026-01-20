@@ -69,7 +69,7 @@ export function WorkspaceSelect() {
 
     return (
         <div className="px-6 mb-8 relative" ref={dropdownRef}>
-            <h2 className="text-[11px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] mb-4 px-2">
+            <h2 className="text-[11px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-4 px-2">
                 Workspace
             </h2>
 
@@ -178,7 +178,7 @@ export function WorkspaceSelect() {
                     </DialogHeader>
                     <form onSubmit={handleCreateSubmit} className="space-y-6 pt-6">
                         <div className="space-y-3">
-                            <label className="text-sm font-black uppercase tracking-widest text-muted-foreground/60">Workspace Name</label>
+                            <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Workspace Name</label>
                             <input
                                 autoFocus
                                 value={newWorkspaceName}
@@ -204,6 +204,6 @@ export function WorkspaceSelect() {
                     </form>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

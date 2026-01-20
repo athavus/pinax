@@ -105,6 +105,26 @@ export async function gitAddToGitignore(path: string, filePath: string): Promise
     return invoke("git_add_to_gitignore", { path, filePath });
 }
 
+export async function gitCreateBranchFromCommit(path: string, branch: string, hash: string): Promise<void> {
+    return invoke("git_create_branch_from_commit", { path, branch, hash });
+}
+
+export async function gitCheckoutCommit(path: string, hash: string): Promise<void> {
+    return invoke("git_checkout_commit", { path, hash });
+}
+
+export async function gitRevertCommit(path: string, hash: string): Promise<void> {
+    return invoke("git_revert_commit", { path, hash });
+}
+
+export async function gitResetToCommit(path: string, hash: string): Promise<void> {
+    return invoke("git_reset_to_commit", { path, hash });
+}
+
+export async function gitCherryPickCommit(path: string, hash: string): Promise<void> {
+    return invoke("git_cherry_pick_commit", { path, hash });
+}
+
 // ============== GitHub Integration ==============
 
 export async function createGithubRepository(

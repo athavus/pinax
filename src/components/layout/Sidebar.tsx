@@ -95,7 +95,7 @@ export function Sidebar() {
                 tabIndex={0}
                 onFocus={() => setNavigationContext("sidebar")}
                 className={cn(
-                    "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border",
+                    "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border/40",
                     "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
                 )}
             >
@@ -106,8 +106,8 @@ export function Sidebar() {
                             <FolderGit2 className="w-5 h-5 font-black" />
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="font-black text-2xl tracking-tighter text-foreground leading-none">Pinax</h1>
-                            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary mt-1 opacity-80">Workbench</span>
+                            <h1 className="font-bold text-2xl tracking-tight text-foreground leading-none">Pinax</h1>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80">Workbench</span>
                         </div>
                     </div>
                 </header>
@@ -118,10 +118,10 @@ export function Sidebar() {
                     {/* Repositories */}
                     <div className="px-0">
                         <div className="px-8 mt-2 mb-4 flex items-center justify-between">
-                            <h2 className="text-[11px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">
+                            <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
                                 Repositories
                             </h2>
-                            <span className="text-[10px] font-black text-primary/40 px-2 py-0.5 bg-primary/5 rounded-none">
+                            <span className="text-[10px] font-bold text-primary/40 px-2 py-0.5 bg-primary/5 rounded-none">
                                 {repositories.length}
                             </span>
                         </div>
@@ -147,8 +147,8 @@ export function Sidebar() {
                 </div>
 
                 {/* Footer with more depth */}
-                <footer className="px-8 py-8 border-t border-sidebar-border bg-card/40 backdrop-blur-md flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
+                <footer className="px-8 py-8 border-t border-sidebar-border/40 bg-card/40 backdrop-blur-md flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
                         {repositories.length} PROJECTS
                     </span>
                     <div className="w-1.5 h-4 bg-primary rounded-none shadow-[0_0_12px_rgba(var(--primary),0.4)]" />
@@ -173,6 +173,7 @@ import {
     ContextMenuSubContent,
     ContextMenuSubTrigger,
     ContextMenuTrigger,
+    ContextMenuPortal,
 } from "@/components/ui/context-menu"
 
 function RepositoryItem({ repository, isSelected, isFocused, onClick }: RepositoryItemProps) {
@@ -217,21 +218,24 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                 <ContextMenuItem>Open in Terminal</ContextMenuItem>
                 <ContextMenuItem>Copy Path</ContextMenuItem>
                 <ContextMenuSub>
-                    <ContextMenuSubTrigger>Move to Workspace</ContextMenuSubTrigger>
-                    <ContextMenuSubContent className="w-48">
-                        {workspaces.length === 0 ? (
-                            <ContextMenuItem disabled>No workspaces</ContextMenuItem>
-                        ) : (
-                            workspaces.map(ws => (
-                                <ContextMenuItem
-                                    key={ws.id}
-                                    onClick={() => addRepositoryToWorkspace(ws.id, repository.path)}
-                                >
-                                    {ws.name}
-                                </ContextMenuItem>
-                            ))
-                        )}
-                    </ContextMenuSubContent>
+                    <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer">Move to Workspace</ContextMenuSubTrigger>
+                    <ContextMenuPortal>
+                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                            {workspaces.length === 0 ? (
+                                <ContextMenuItem disabled className="py-2.5 text-xs font-bold px-4">No workspaces</ContextMenuItem>
+                            ) : (
+                                workspaces.map(ws => (
+                                    <ContextMenuItem
+                                        key={ws.id}
+                                        onClick={() => addRepositoryToWorkspace(ws.id, repository.path)}
+                                        className="py-2.5 text-xs font-mono font-bold cursor-pointer truncate px-4"
+                                    >
+                                        {ws.name}
+                                    </ContextMenuItem>
+                                ))
+                            )}
+                        </ContextMenuSubContent>
+                    </ContextMenuPortal>
                 </ContextMenuSub>
             </ContextMenuContent>
         </ContextMenu>

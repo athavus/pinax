@@ -5,6 +5,7 @@
 import React from "react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils";
+// import { open } from "@tauri-apps/plugin-opener";
 import {
     GitBranch,
     Check,
@@ -14,8 +15,15 @@ import {
     ArrowDown,
     ChevronDown,
     Trash2,
-    EyeOff
+    EyeOff,
+    Copy,
+    CornerUpLeft,
+    History,
+    GitBranchPlus,
+    GitCommitVertical,
+    ExternalLink
 } from "lucide-react";
+import { md5 } from "@/lib/md5";
 import { WelcomeView } from "./WelcomeView";
 import {
     ContextMenu,
@@ -53,6 +61,11 @@ export function MainArea() {
         resolveConflict,
         discardChanges,
         addToGitignore,
+        createBranchFromCommit,
+        checkoutCommit,
+        revertCommit,
+        resetToCommit,
+        cherryPickCommit,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -117,12 +130,12 @@ export function MainArea() {
             <header className="flex flex-col border-b border-border/20 bg-card/40 backdrop-blur-md">
                 <div className="flex items-center h-16 px-6 gap-6">
                     {/* Repository Indicator */}
-                    <div className="flex items-center gap-4 px-4 py-2 border border-transparent max-w-[300px] group/repo">
-                        <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5">
+                    <div className="flex items-center gap-4 px-4 py-2 border border-transparent max-w-[200px] shrink group/repo min-w-0">
+                        <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5 shrink-0">
                             <FileText className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] font-black uppercase text-muted-foreground/30 leading-none mb-1.5 tracking-[0.2em]">Repository</span>
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground/30 leading-none mb-1.5 tracking-[0.1em]">Repository</span>
                             <span className="text-sm font-bold truncate text-foreground/70 group-hover/repo:text-foreground transition-colors">{selectedRepo.name}</span>
                         </div>
                     </div>
@@ -247,64 +260,72 @@ export function MainArea() {
                     <div className="w-px h-6 bg-border/20" />
 
                     {/* Git Actions */}
-                    <div className="flex items-center gap-3 ml-auto shrink-0">
+                    <div className="flex items-center gap-2 ml-auto shrink-0">
                         <button
                             onClick={fetch}
-                            disabled={isLoading}
-                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-none text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50 min-w-[120px] justify-center"
+                            disabled={isFetching}
+                            className={cn(
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                isFetching && "animate-pulse"
+                            )}
                         >
-                            <RefreshCw className={cn("w-3.5 h-3.5", isFetching && "animate-spin")} />
-                            {isFetching ? "Fetching" : "Fetch"}
+                            <RefreshCw className={cn("w-3 h-3", isFetching && "animate-spin")} />
+                            <span className="hidden md:inline">Fetch</span>
                         </button>
                         <button
                             onClick={pull}
-                            disabled={isLoading}
-                            className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-none text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/5 active:scale-[0.98] disabled:opacity-50 min-w-[110px] justify-center"
+                            disabled={isPulling}
+                            className={cn(
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                isPulling && "animate-pulse"
+                            )}
                         >
-                            <ArrowDown className={cn("w-3.5 h-3.5", isPulling && "animate-bounce")} />
-                            {isPulling ? "Pulling" : "Pull"}
+                            <ArrowDown className={cn("w-3 h-3", isPulling && "animate-bounce")} />
+                            <span className="hidden md:inline">Pull</span>
                         </button>
                         <button
                             onClick={push}
-                            disabled={isLoading}
+                            disabled={isPushing}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 rounded-none text-xs font-black uppercase tracking-widest transition-all border active:scale-[0.98] disabled:opacity-50 min-w-[130px] justify-center",
-                                isPushing ? "bg-primary/5 text-primary/40 border-primary/5" : "bg-primary/10 text-primary border-primary/5 hover:bg-primary/20"
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden",
+                                isPushing && "animate-pulse"
                             )}
                         >
-                            <Upload className={cn("w-3.5 h-3.5", isPushing && "animate-pulse")} />
-                            {isPushing ? "Pushing" : "Push"}
+                            <Upload className={cn("w-3 h-3", isPushing && "animate-bounce")} />
+                            <span className="hidden md:inline">Push</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Secondary Header / Tabs */}
-                <div className="flex items-center px-6 h-12 border-t border-border/10 bg-card/20 backdrop-blur-sm">
-                    <div className="flex h-full gap-6">
-                        <button
-                            onClick={() => setActiveTab("changes")}
-                            className={cn(
-                                "h-full px-4 text-xs font-black uppercase tracking-[0.2em] transition-all relative border-b-2",
-                                activeTab === "changes" ? "text-primary border-primary" : "text-muted-foreground/60 border-transparent hover:text-foreground"
-                            )}
-                        >
-                            Changes
-                            {repositoryStatus && (repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length) > 0 && (
-                                <span className="ml-2 text-primary font-black px-2 py-0.5 bg-primary/20 rounded-full text-[10px]">
-                                    {repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length}
-                                </span>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("history")}
-                            className={cn(
-                                "h-full px-4 text-xs font-black uppercase tracking-[0.2em] transition-all relative border-b-2",
-                                activeTab === "history" ? "text-primary border-primary" : "text-muted-foreground/60 border-transparent hover:text-foreground"
-                            )}
-                        >
-                            History
-                        </button>
-                    </div>
+                {/* Commit List / Changes Toggle */}
+                <div className="border-b border-border/10 flex items-center">
+                    <button
+                        onClick={() => setActiveTab("changes")}
+                        className={cn(
+                            "px-6 py-3 text-[10px] uppercase font-bold tracking-widest border-b-2 transition-colors",
+                            activeTab === "changes"
+                                ? "border-primary text-foreground"
+                                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:bg-white/5"
+                        )}
+                    >
+                        Changes
+                        {repositoryStatus && (repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length) > 0 && (
+                            <span className="ml-2 text-primary font-bold px-2 py-0.5 bg-primary/20 rounded-full text-[10px]">
+                                {repositoryStatus.staged.length + repositoryStatus.unstaged.length + repositoryStatus.untracked.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("history")}
+                        className={cn(
+                            "px-6 py-3 text-[10px] uppercase font-bold tracking-widest border-b-2 transition-colors",
+                            activeTab === "history"
+                                ? "border-primary text-foreground"
+                                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:bg-white/5"
+                        )}
+                    >
+                        History
+                    </button>
                 </div>
             </header>
 
@@ -353,33 +374,109 @@ export function MainArea() {
                                         }
 
                                         return (
-                                            <div
-                                                key={commit.hash}
-                                                className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-none transition-all group border border-transparent hover:border-border/10 relative"
-                                            >
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
-                                                        {index === 0 && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    undoCommit();
-                                                                }}
-                                                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 bg-destructive/10 text-destructive text-[9px] font-black uppercase tracking-widest border border-destructive/20 hover:bg-destructive/20 rounded-none"
-                                                            >
-                                                                Undo
-                                                            </button>
-                                                        )}
+                                            <ContextMenu key={commit.hash}>
+                                                <ContextMenuTrigger asChild>
+                                                    <div
+                                                        className="w-full flex flex-col gap-1.5 px-4 py-4 hover:bg-primary/5 rounded-none transition-all group border border-transparent hover:border-border/10 relative cursor-context-menu"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-[10px] font-mono text-primary/40 group-hover:text-primary transition-colors bg-primary/5 px-2 py-0.5 rounded-full">{commit.short_hash}</span>
+                                                                {index === 0 && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            undoCommit();
+                                                                        }}
+                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 bg-destructive/10 text-destructive text-[9px] font-black uppercase tracking-widest border border-destructive/20 hover:bg-destructive/20 rounded-none"
+                                                                    >
+                                                                        Undo
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
+                                                        </div>
+                                                        <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <img
+                                                                src={`https://www.gravatar.com/avatar/${md5(commit.email.trim().toLowerCase())}?d=identicon`}
+                                                                alt={commit.author}
+                                                                className="w-4 h-4 rounded-full opacity-80"
+                                                            />
+                                                            <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
+                                                        </div>
                                                     </div>
-                                                    <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-tighter shrink-0">{dateStr}</span>
-                                                </div>
-                                                <p className="text-sm font-bold text-foreground/80 leading-relaxed truncate">{commit.message}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-1 h-1 rounded-full bg-primary/20" />
-                                                    <span className="text-[10px] font-bold text-muted-foreground/40">{commit.author}</span>
-                                                </div>
-                                            </div>
+                                                </ContextMenuTrigger>
+                                                <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => {
+                                                            /* TODO: Implement dialog for branch name input */
+                                                            const branchName = prompt("Enter new branch name:");
+                                                            if (branchName) createBranchFromCommit(branchName, commit.hash);
+                                                        }}
+                                                    >
+                                                        <GitBranchPlus className="w-3.5 h-3.5" />
+                                                        Create branch from commit
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => checkoutCommit(commit.hash)}
+                                                    >
+                                                        <GitCommitVertical className="w-3.5 h-3.5" />
+                                                        Checkout commit
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => revertCommit(commit.hash)}
+                                                    >
+                                                        <History className="w-3.5 h-3.5" />
+                                                        Revert changes in commit
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => resetToCommit(commit.hash)}
+                                                    >
+                                                        <CornerUpLeft className="w-3.5 h-3.5" />
+                                                        Reset to commit...
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => cherryPickCommit(commit.hash)}
+                                                    >
+                                                        <GitBranchPlus className="w-3.5 h-3.5" />
+                                                        Cherry-pick commit...
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem
+                                                        className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(commit.hash);
+                                                        }}
+                                                    >
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                        Copy SHA
+                                                    </ContextMenuItem>
+                                                    {selectedRepo?.remote_url && (selectedRepo.remote_url.includes("github.com") || selectedRepo.remote_url.includes("gitlab.com")) && (
+                                                        <ContextMenuItem
+                                                            className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
+                                                            onClick={async () => {
+                                                                const url = selectedRepo.remote_url?.replace(/\.git$/, "");
+                                                                if (url) {
+                                                                    // Basic heuristic for GitHub/GitLab commit URLs
+                                                                    const commitUrl = `${url}/commit/${commit.hash}`;
+                                                                    const opener = await import("@tauri-apps/plugin-opener") as any;
+                                                                    if (opener && typeof opener.open === 'function') {
+                                                                        await opener.open(commitUrl);
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            <ExternalLink className="w-3.5 h-3.5" />
+                                                            View on GitHub
+                                                        </ContextMenuItem>
+                                                    )}
+                                                </ContextMenuContent>
+                                            </ContextMenu>
                                         );
                                     })
                                 ) : (
@@ -397,40 +494,39 @@ export function MainArea() {
                             value={commitMessage}
                             onChange={(e) => setCommitMessage(e.target.value)}
                             placeholder="Briefly describe your changes..."
-                            className="w-full min-h-[100px] p-4 text-sm border border-border/20 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-none font-medium shadow-inner"
+                            className="w-full min-h-[100px] p-4 text-sm border border-border/10 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none resize-none transition-all placeholder:text-muted-foreground/20 bg-background/20 rounded-none font-medium shadow-inner"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                                     handleCommit();
                                 }
                             }}
                         />
-                        <button
-                            onClick={handleCommit}
-                            disabled={!commitMessage.trim() || isLoading}
-                            className={cn(
-                                "w-full mt-4 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] active:scale-[0.98] transition-all rounded-none flex items-center justify-center gap-3",
-                                isCommitted
-                                    ? "bg-green-500/20 text-green-500 border border-green-500/30"
-                                    : "bg-primary/20 text-primary hover:bg-primary/30 shadow-lg shadow-primary/5 border border-primary/10",
-                                (isLoading && !isCommitted) && "opacity-50"
-                            )}
-                        >
-                            {isCommitted ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    Committed!
-                                </>
-                            ) : (
-                                <>Commit to {repositoryStatus?.branch || "main"}</>
-                            )}
-                        </button>
+                        <div className="flex justify-center mt-3">
+                            <button
+                                onClick={handleCommit}
+                                disabled={!commitMessage.trim() || isLoading}
+                                className={cn(
+                                    "w-full py-3 bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 rounded-none flex items-center justify-center gap-2 group relative overflow-hidden",
+                                    isCommitted && "bg-green-500 hover:bg-green-600 border-green-400"
+                                )}
+                            >
+                                <span className={cn("relative z-10 flex items-center gap-2", isCommitted && "opacity-0")}>
+                                    Commit to <strong>{repositoryStatus?.branch || "main"}</strong>
+                                </span>
+                                {isCommitted && (
+                                    <div className="absolute inset-0 flex items-center justify-center animate-in zoom-in duration-300">
+                                        <Check className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div className="flex-1 bg-background flex flex-col overflow-hidden">
                     {selectedFile ? (
                         <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in duration-300">
-                            <div className="h-12 border-b border-border/20 flex items-center px-6 bg-muted/40 backdrop-blur-sm justify-between gap-4">
+                            <div className="h-16 border-b border-border/10 flex items-center justify-between px-6 bg-card/50 backdrop-blur-md sticky top-0 z-10">
                                 <span className="text-[11px] font-mono text-muted-foreground truncate">{selectedFile}</span>
 
                                 {repositoryStatus?.conflicts.find(c => c.path === selectedFile) && (

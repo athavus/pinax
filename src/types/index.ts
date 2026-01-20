@@ -17,6 +17,7 @@ export interface CommitInfo {
     short_hash: string;
     message: string;
     author: string;
+    email: string;
     timestamp: string;
 }
 

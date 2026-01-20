@@ -25,7 +25,12 @@ import {
     getGitHistory,
     createGithubRepository,
     addRepositoryToWorkspace,
-    deleteWorkspace
+    deleteWorkspace,
+    gitCreateBranchFromCommit,
+    gitCheckoutCommit,
+    gitRevertCommit,
+    gitResetToCommit,
+    gitCherryPickCommit
 } from "@/lib/tauri";
 
 interface AppState {
@@ -73,6 +78,12 @@ interface AppState {
     resolveConflict: (filePath: string, resolution: "ours" | "theirs") => Promise<void>;
     discardChanges: (filePath: string) => Promise<void>;
     addToGitignore: (filePath: string) => Promise<void>;
+    createBranchFromCommit: (branch: string, hash: string) => Promise<void>;
+    checkoutCommit: (hash: string) => Promise<void>;
+    revertCommit: (hash: string) => Promise<void>;
+    resetToCommit: (hash: string) => Promise<void>;
+    cherryPickCommit: (hash: string) => Promise<void>;
+
 
     // GitHub Integration
     createGithubRepository: (token: string, name: string, description: string | undefined, isPrivate: boolean) => Promise<void>;
@@ -220,7 +231,12 @@ export const useAppStore = create<AppState>((set, get) => ({
             set({ repositoryStatus: status, isPushing: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Push failed: ${error}`, isPushing: false, isLoading: false });
+            const errorMessage = String(error);
+            if (errorMessage.includes("non-fast-forward") || errorMessage.includes("rejected")) {
+                set({ error: "Push rejected: Remote changes detected. Please pull first.", isPushing: false, isLoading: false });
+            } else {
+                set({ error: `Push failed: ${errorMessage}`, isPushing: false, isLoading: false });
+            }
         }
     },
 
@@ -332,6 +348,76 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
+    createBranchFromCommit: async (branch, hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitCreateBranchFromCommit(selectedRepositoryPath, branch, hash);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            const branches = await listBranches(selectedRepositoryPath);
+            set({ repositoryStatus: status, branches, isLoading: false });
+        } catch (error) {
+            set({ error: `Create branch from commit failed: ${error}`, isLoading: false });
+        }
+    },
+
+    checkoutCommit: async (hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitCheckoutCommit(selectedRepositoryPath, hash);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
+        } catch (error) {
+            set({ error: `Checkout commit failed: ${error}`, isLoading: false });
+        }
+    },
+
+    revertCommit: async (hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitRevertCommit(selectedRepositoryPath, hash);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
+        } catch (error) {
+            set({ error: `Revert commit failed: ${error}`, isLoading: false });
+        }
+    },
+
+    resetToCommit: async (hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitResetToCommit(selectedRepositoryPath, hash);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
+        } catch (error) {
+            set({ error: `Reset to commit failed: ${error}`, isLoading: false });
+        }
+    },
+
+    cherryPickCommit: async (hash) => {
+        const { selectedRepositoryPath } = get();
+        if (!selectedRepositoryPath) return;
+        set({ isLoading: true });
+        try {
+            await gitCherryPickCommit(selectedRepositoryPath, hash);
+            const status = await getRepositoryStatus(selectedRepositoryPath);
+            set({ repositoryStatus: status, isLoading: false });
+            await get().loadHistory();
+        } catch (error) {
+            set({ error: `Cherry-pick failed: ${error}`, isLoading: false });
+        }
+    },
+
     createGithubRepository: async (token, name, description, isPrivate) => {
         set({ isLoading: true });
         try {
@@ -350,6 +436,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             set({ error: `Failed to add repository to workspace: ${error}` });
         }
+    },
+
+    hideRepository: (path) => {
+        console.log("Hiding repository:", path);
+        // This is a stub for now, pending actual implementation of hiding logic if needed
+        // Or if it was intended to just remove from view, maybe we need a 'hiddenRepositories' state
+        // For now, implementing to satisfy interface
     },
 
     toggleCommandPalette: () =>
