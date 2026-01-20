@@ -254,9 +254,9 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                         className={cn(
                             "w-full flex items-center gap-4 px-8 py-2.5 text-left outline-none transition-all duration-300 border-l-4",
                             isSelected
-                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 scale-[1.02] z-10 mx-2 w-[calc(100%-1rem)] rounded-xl"
-                                : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30 hover:rounded-xl",
-                            isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20 rounded-xl"
+                                ? "bg-primary text-primary-foreground border-primary font-black shadow-lg shadow-primary/20 z-10"
+                                : "text-muted-foreground/60 border-transparent hover:bg-primary/10 hover:text-foreground hover:border-primary/30",
+                            isFocused && !isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20"
                         )}
                     >
                         <FolderGit2 className={cn(
