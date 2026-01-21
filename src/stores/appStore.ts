@@ -42,6 +42,9 @@ import {
     gitPushInitial,
     generateTemplates,
     setupGithubAuth as setupGithubAuthTauri,
+    detectEditors,
+    openInEditor as openInEditorTauri,
+    EditorInfo
 } from "@/lib/tauri";
 
 interface AppState {
@@ -74,6 +77,7 @@ interface AppState {
         githubToken: string;
         preferredEditor: string;
     };
+    availableEditors: EditorInfo[];
 
     // Actions
     setSelectedWorkspace: (id: string | null) => void;
@@ -108,6 +112,9 @@ interface AppState {
     stageAll: () => Promise<void>;
     unstageAll: () => Promise<void>;
     setupGithubAuth: () => Promise<void>;
+    loadAvailableEditors: () => Promise<void>;
+    openSelectedFileInEditor: () => Promise<void>;
+    openRepositoryInEditor: (repoPath?: string) => Promise<void>;
 
 
     // GitHub Integration
@@ -160,6 +167,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         githubToken: localStorage.getItem("github_token") || "",
         preferredEditor: localStorage.getItem("preferred_editor") || "auto",
     },
+    availableEditors: [],
 
     // Actions
     setSelectedWorkspace: (id) => set({ selectedWorkspaceId: id }),
@@ -368,13 +376,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     resolveConflict: async (filePath: string, resolution: "ours" | "theirs") => {
-        const { selectedRepositoryPath } = get();
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
         if (!selectedRepositoryPath) return;
         set({ isLoading: true });
         try {
             await gitResolveConflict(selectedRepositoryPath, filePath, resolution);
-            const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isLoading: false });
+            await refreshRepositoryStatus();
+            set({ isLoading: false });
         } catch (error) {
             set({ error: `Conflict resolution failed: ${error}`, isLoading: false });
         }
@@ -539,6 +547,43 @@ export const useAppStore = create<AppState>((set, get) => ({
             });
         } catch (error) {
             set({ error: `Failed to configure Git auth: ${error}`, isLoading: false });
+        }
+    },
+
+    loadAvailableEditors: async () => {
+        try {
+            const editors = await detectEditors();
+            set({ availableEditors: editors });
+        } catch (error) {
+            console.error("Failed to detect editors:", error);
+        }
+    },
+
+    openSelectedFileInEditor: async () => {
+        const { selectedRepositoryPath, selectedFile, settings } = get();
+        if (!selectedRepositoryPath) return;
+
+        try {
+            // If no file is selected, just open the repository root
+            const targetPath = selectedFile
+                ? `${selectedRepositoryPath}/${selectedFile}`
+                : selectedRepositoryPath;
+
+            await openInEditorTauri(targetPath, settings.preferredEditor);
+        } catch (error) {
+            set({ error: `Failed to open editor: ${error}` });
+        }
+    },
+
+    openRepositoryInEditor: async (repoPath?: string) => {
+        const { selectedRepositoryPath, settings } = get();
+        const pathToOpen = repoPath || selectedRepositoryPath;
+        if (!pathToOpen) return;
+
+        try {
+            await openInEditorTauri(pathToOpen, settings.preferredEditor);
+        } catch (error) {
+            set({ error: `Failed to open repository in editor: ${error}` });
         }
     },
 

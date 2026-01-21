@@ -20,7 +20,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps) {
-    const { settings, updateSettings } = useAppStore();
+    const { settings, updateSettings, availableEditors } = useAppStore();
 
     // Local state for immediate editing
     const [token, setToken] = useState(settings.githubToken);
@@ -126,11 +126,11 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                                         className="w-full bg-transparent px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] focus:outline-none appearance-none text-muted-foreground/60 cursor-pointer pr-10 hover:bg-white/5 transition-all outline-none ring-0"
                                     >
                                         <option value="auto" className="bg-[#0A0A0B]">System Default (Auto)</option>
-                                        <option value="code" className="bg-[#0A0A0B]">Visual Studio Code</option>
-                                        <option value="subl" className="bg-[#0A0A0B]">Sublime Text</option>
-                                        <option value="zed" className="bg-[#0A0A0B]">Zed Editor</option>
-                                        <option value="gedit" className="bg-[#0A0A0B]">Gedit</option>
-                                        <option value="kate" className="bg-[#0A0A0B]">Kate</option>
+                                        {availableEditors.map((e) => (
+                                            <option key={String(e.command)} value={String(e.command)} className="bg-[#0A0A0B]">
+                                                {String(e.name)}
+                                            </option>
+                                        ))}
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/10">
                                         <ChevronDown className="w-4 h-4" />

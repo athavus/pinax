@@ -1,9 +1,0 @@
-[Desktop Entry]
-Categories=
-Comment=A Tauri App
-Exec=pinax
-StartupWMClass=pinax
-Icon=pinax
-Name=pinax
-Terminal=false
-Type=Application

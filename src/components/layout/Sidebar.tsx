@@ -235,7 +235,7 @@ import {
 } from "@/components/ui/context-menu"
 
 function RepositoryItem({ repository, isSelected, isFocused, onClick }: RepositoryItemProps) {
-    const { workspaces, addRepositoryToWorkspace, settings: appSettings } = useAppStore();
+    const { workspaces, addRepositoryToWorkspace } = useAppStore();
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: repository.path,
     });
@@ -299,10 +299,7 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                 </ContextMenuItem>
                 <ContextMenuItem
                     onClick={() => {
-                        invoke("open_in_editor", {
-                            path: repository.path,
-                            preferredEditor: appSettings.preferredEditor
-                        }).catch(console.error);
+                        useAppStore.getState().openRepositoryInEditor(repository.path);
                     }}
                     className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4"
                 >

@@ -3,3 +3,21 @@
 package-lock.json
 pnpm-lock.json
 
+
+# Node
+node_modules/
+dist/
+pnpm-lock.yaml
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# OS/System
+.DS_Store
+Thumbs.db
+
+# Arch Linux Build Artifacts
+/pkg/
+/*.pkg.tar.zst
+/*.log

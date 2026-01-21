@@ -656,19 +656,29 @@ export function MainArea() {
                                 <span className="text-[11px] font-mono text-muted-foreground truncate">{selectedFile}</span>
 
                                 {repositoryStatus?.conflicts.find(c => c.path === selectedFile) && (
-                                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-500">
-                                        <div className="flex bg-destructive/5 border border-destructive/20 p-1 rounded-none gap-1">
+                                    <div className="flex items-center gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                                        <div className="flex bg-destructive/5 border border-destructive/20 p-1.5 rounded-xl gap-1.5 backdrop-blur-xl">
                                             <button
                                                 onClick={() => resolveConflict(selectedFile, "ours")}
-                                                className="px-3 py-1.5 bg-background border border-border/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest transition-all rounded-none"
+                                                className="px-4 py-2 bg-background border border-border/20 hover:bg-primary/10 hover:border-primary/40 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg flex items-center gap-2"
                                             >
+                                                <CornerUpLeft className="w-3.5 h-3.5 opacity-50" />
                                                 Use Ours
                                             </button>
                                             <button
                                                 onClick={() => resolveConflict(selectedFile, "theirs")}
-                                                className="px-3 py-1.5 bg-background border border-border/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest transition-all rounded-none"
+                                                className="px-4 py-2 bg-background border border-border/20 hover:bg-primary/10 hover:border-primary/40 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg flex items-center gap-2"
                                             >
+                                                <ExternalLink className="w-3.5 h-3.5 opacity-50" />
                                                 Use Theirs
+                                            </button>
+                                            <div className="w-px h-6 bg-border/20 mx-1 self-center" />
+                                            <button
+                                                onClick={() => useAppStore.getState().openSelectedFileInEditor()}
+                                                className="px-4 py-2 bg-primary/20 border border-primary/20 hover:bg-primary/30 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 text-primary"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" />
+                                                Open in Editor
                                             </button>
                                         </div>
                                     </div>

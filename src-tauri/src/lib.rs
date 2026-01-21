@@ -6,6 +6,7 @@ mod git;
 mod repository;
 mod workspace;
 mod github;
+mod editors;
 
 use std::path::Path;
 
@@ -324,6 +325,11 @@ async fn get_github_avatars(remote_url: String, commit_hashes: Vec<String>) -> R
 }
 
 #[tauri::command]
+async fn detect_editors() -> Result<Vec<editors::EditorInfo>, String> {
+    Ok(editors::detect_editors())
+}
+
+#[tauri::command]
 async fn open_terminal(path: String) -> Result<(), String> {
     let terminals = vec![
         ("gnome-terminal", vec!["--working-directory", &path]),
@@ -346,48 +352,59 @@ async fn open_terminal(path: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Result<(), String> {
+    println!("Attempting to open path in editor: {}", path);
     let mut editors = vec![
         ("code", vec![&path]),
         ("subl", vec![&path]),
         ("zed", vec![&path]),
+        ("nvim", vec![&path]),
+        ("vim", vec![&path]),
+        ("antigravity", vec![&path]),
         ("gedit", vec![&path]),
-        ("kwrite", vec![&path]),
-        ("xed", vec![&path]),
-        ("mousepad", vec![&path]),
         ("kate", vec![&path]),
+        ("mousepad", vec![&path]),
     ];
 
-    // If a preferred editor is specified and not "auto", move it to the front
+    // If a preferred editor is specified and not "auto", move it to the front or use it directly
     if let Some(ref pref) = preferred_editor {
         if pref != "auto" && !pref.is_empty() {
-            // Find if we already have it in our list to reuse args
+            println!("Targeting preferred editor: {}", pref);
+            // Try to run the preferred editor directly first
+            if pref.contains('/') {
+                match std::process::Command::new(pref).arg(&path).status() {
+                    Ok(status) if status.success() => return Ok(()),
+                    e => println!("Direct path failed: {:?}", e),
+                }
+            } else {
+                // For names, try to launch via shell for better PATH resolution
+                let shell_cmd = format!("{} \"{}\"", pref, path);
+                match std::process::Command::new("sh").args(["-c", &shell_cmd]).status() {
+                    Ok(status) if status.success() => return Ok(()),
+                    e => println!("Shell execution failed: {:?}", e),
+                }
+            }
+
+            // Fallback: move it to the front of our list if we know it
             if let Some(pos) = editors.iter().position(|(cmd, _)| cmd == pref) {
                 let item = editors.remove(pos);
                 editors.insert(0, item);
-            } else {
-                // Not in our list, add it as a raw command
-                // We'll assume a single argument for the path is standard
-                // This is a bit risky but fallback will catch it
             }
         }
     }
 
     for (cmd, args) in editors {
-        if std::process::Command::new(cmd).args(args).spawn().is_ok() {
-            return Ok(());
+        match std::process::Command::new(cmd).args(args).status() {
+            Ok(status) if status.success() => return Ok(()),
+            _ => continue,
         }
     }
 
-    // Last resort fallback
-    if let Some(ref pref) = preferred_editor {
-        if pref != "auto" && !pref.is_empty() {
-             if std::process::Command::new(pref).arg(&path).spawn().is_ok() {
-                return Ok(());
-             }
-        }
+    // Try xdg-open as final fallback
+    if std::process::Command::new("xdg-open").arg(&path).status().is_ok() {
+        return Ok(());
     }
 
-    Err("No suitable code editor found. Please install VS Code, Sublime Text, or Gedit.".into())
+    Err("No suitable code editor found. Please check if your preferred editor is installed and in your PATH.".into())
 }
 
 #[tauri::command]
@@ -451,6 +468,7 @@ pub fn run() {
             open_file_manager,
             generate_templates,
             setup_github_auth,
+            detect_editors,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

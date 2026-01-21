@@ -209,3 +209,17 @@ export async function generateTemplates(
 export async function setupGithubAuth(): Promise<void> {
     return await invoke("setup_github_auth");
 }
+
+export interface EditorInfo {
+    name: String;
+    command: String;
+    icon?: String;
+}
+
+export async function detectEditors(): Promise<EditorInfo[]> {
+    return await invoke<EditorInfo[]>("detect_editors");
+}
+
+export async function openInEditor(path: String, preferredEditor?: String): Promise<void> {
+    return await invoke("open_in_editor", { path, preferredEditor });
+}
