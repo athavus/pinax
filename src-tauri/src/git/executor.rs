@@ -15,11 +15,15 @@ pub type GitResult<T> = Result<T, GitError>;
 pub struct GitError {
     pub message: String,
     pub command: String,
+    pub exit_code: Option<i32>,
 }
 
 impl std::fmt::Display for GitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Git error ({}): {}", self.command, self.message)
+        match self.exit_code {
+            Some(code) => write!(f, "Git error ({}) [exit {}]: {}", self.command, code, self.message),
+            None => write!(f, "Git error ({}): {}", self.command, self.message),
+        }
     }
 }
 
@@ -45,6 +49,7 @@ pub async fn execute(repo_path: &Path, args: &[&str]) -> GitResult<Output> {
         .map_err(|e| GitError {
             message: format!("Failed to execute git: {}", e),
             command: args.join(" "),
+            exit_code: None,
         })?;
 
     Ok(output)
@@ -59,6 +64,7 @@ pub async fn execute_string(repo_path: &Path, args: &[&str]) -> GitResult<String
         return Err(GitError {
             message: stderr.to_string(),
             command: args.join(" "),
+            exit_code: output.status.code(),
         });
     }
 

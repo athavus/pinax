@@ -202,14 +202,14 @@ export function MainArea() {
 
             {/* Header with Glassmorphism */}
             <header className="flex flex-col border-b border-border/10 bg-card/40 backdrop-blur-md">
-                <div className="flex items-center h-16 px-6 gap-6">
+                <div className="flex items-center h-16 px-4 md:px-6 gap-3 md:gap-4 lg:gap-6">
                     {/* Repository Indicator */}
-                    <div className="flex items-center gap-4 px-4 py-2 max-w-[200px] shrink group/repo min-w-0">
-                        <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5 shrink-0">
+                    <div className="flex items-center gap-3 py-2 px-2 md:px-4 max-w-[140px] md:max-w-[200px] shrink group/repo min-w-0">
+                        <div className="p-2 rounded-none bg-primary/5 text-primary/40 group-hover/repo:bg-primary/20 group-hover/repo:text-primary transition-all duration-300 ring-1 ring-primary/5 shrink-0 hidden sm:flex">
                             <FileText className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground/70 leading-none mb-1.5 tracking-[0.1em]">Repository</span>
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground/70 leading-none mb-1.5 tracking-[0.1em] hidden lg:block">Repository</span>
                             <span className="text-sm font-bold truncate text-foreground group-hover/repo:text-foreground transition-colors">{selectedRepo.name}</span>
                         </div>
                     </div>
@@ -217,17 +217,17 @@ export function MainArea() {
                     <div className="w-px h-6 bg-border/20" />
 
                     {/* Branch Selector with Dropdown */}
-                    <div className="relative">
+                    <div className="relative shrink-0">
                         <button
                             onClick={() => setBranchSelectorOpen(!branchSelectorOpen)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 bg-primary/10 border border-transparent hover:bg-primary/20 transition-all rounded-xl group",
+                                "flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2.5 bg-primary/10 border border-transparent hover:bg-primary/20 transition-all rounded-xl group",
                                 branchSelectorOpen && "ring-2 ring-primary/30 bg-primary/20"
                             )}
                         >
                             <GitBranch className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100" />
                             <span className="text-sm font-black text-foreground">{repositoryStatus?.branch || "main"}</span>
-                            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", branchSelectorOpen && "rotate-180")} />
+                            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform hidden md:block", branchSelectorOpen && "rotate-180")} />
                         </button>
 
                         {branchSelectorOpen && (

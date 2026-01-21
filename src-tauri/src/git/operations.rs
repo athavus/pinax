@@ -9,6 +9,7 @@ pub async fn fetch(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "fetch".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -22,6 +23,7 @@ pub async fn pull(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "pull".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -48,6 +50,7 @@ pub async fn push(path: &Path) -> GitResult<()> {
                 return Err(GitError {
                     message: u_stderr.to_string(),
                     command: format!("push -u origin {}", branch),
+                    exit_code: u_output.status.code(),
                 });
             }
         }
@@ -55,6 +58,7 @@ pub async fn push(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "push".to_string(),
+            exit_code: output.status.code(),
         });
     }
     
@@ -75,6 +79,7 @@ pub async fn push_initial(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("push -u origin {}", branch),
+            exit_code: output.status.code(),
         });
     }
     
@@ -89,6 +94,7 @@ pub async fn stage_file(path: &Path, file_path: &str) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("add {}", file_path),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -104,6 +110,7 @@ pub async fn unstage_file(path: &Path, file_path: &str) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("reset HEAD -- {}", file_path),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -115,14 +122,18 @@ pub async fn commit(path: &Path, message: &str) -> GitResult<()> {
     let output = execute(path, &["commit", "-m", message]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        // Special case: nothing to commit
-        if stderr.contains("nothing to commit") {
+        // Special case: nothing to commit (including localized messages)
+        if stderr.contains("nothing to commit") || 
+           stderr.contains("no changes added to commit") ||
+           stderr.contains("nada para submeter") ||
+           stderr.contains("nenhuma alteração adicionada ao commit") {
             return Ok(());
         }
         
         return Err(GitError {
             message: stderr.to_string(),
             command: "commit".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -136,6 +147,7 @@ pub async fn undo_commit(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "reset --soft HEAD~1".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -161,6 +173,7 @@ pub async fn resolve_conflict(path: &Path, file_path: &str, resolution: &str) ->
         _ => return Err(GitError {
             message: "Invalid resolution".to_string(),
             command: "resolve_conflict".to_string(),
+            exit_code: None,
         }),
     };
     
@@ -170,6 +183,7 @@ pub async fn resolve_conflict(path: &Path, file_path: &str, resolution: &str) ->
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("checkout {} -- {}", arg, file_path),
+            exit_code: output.status.code(),
         });
     }
     
@@ -216,11 +230,13 @@ pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
         .map_err(|e| GitError {
             message: e.to_string(),
             command: "open .gitignore".to_string(),
+            exit_code: None,
         })?;
         
     writeln!(file, "{}", file_path).map_err(|e| GitError {
         message: e.to_string(),
         command: "write to .gitignore".to_string(),
+        exit_code: None,
     })?;
     
     Ok(())
@@ -247,6 +263,7 @@ pub async fn revert_commit(path: &Path, hash: &str) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("revert {}", hash),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -267,6 +284,7 @@ pub async fn cherry_pick_commit(path: &Path, hash: &str) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("cherry-pick {}", hash),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -278,6 +296,7 @@ pub async fn init(path: &Path) -> GitResult<()> {
         std::fs::create_dir_all(parent).map_err(|e| GitError {
             message: e.to_string(),
             command: "mkdir -p".to_string(),
+            exit_code: None,
         })?;
     }
     
@@ -286,6 +305,7 @@ pub async fn init(path: &Path) -> GitResult<()> {
         std::fs::create_dir_all(path).map_err(|e| GitError {
             message: e.to_string(),
             command: "mkdir".to_string(),
+            exit_code: None,
         })?;
     }
 
@@ -295,6 +315,7 @@ pub async fn init(path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "init".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -308,6 +329,7 @@ pub async fn remote_add(path: &Path, name: &str, url: &str) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("remote add {} {}", name, url),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -321,6 +343,7 @@ pub async fn remote_set_url(path: &Path, name: &str, url: &str) -> GitResult<()>
         return Err(GitError {
             message: stderr.to_string(),
             command: format!("remote set-url {} {}", name, url),
+            exit_code: output.status.code(),
         });
     }
     Ok(())
@@ -333,6 +356,7 @@ pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
         std::fs::create_dir_all(parent).map_err(|e| GitError {
             message: e.to_string(),
             command: "mkdir -p".to_string(),
+            exit_code: None,
         })?;
     }
 
@@ -349,6 +373,7 @@ pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
         .map_err(|e| GitError {
             message: format!("Failed to execute git clone: {}", e),
             command: format!("clone {} {}", url, path.display()),
+            exit_code: None,
         })?;
 
     if !output.status.success() {
@@ -356,6 +381,7 @@ pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
         return Err(GitError {
             message: stderr.to_string(),
             command: "clone".to_string(),
+            exit_code: output.status.code(),
         });
     }
     Ok(())

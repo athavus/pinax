@@ -294,8 +294,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     commit: async (message) => {
-        const { selectedRepositoryPath } = get();
+        const { selectedRepositoryPath, repositoryStatus } = get();
         if (!selectedRepositoryPath) return;
+
+        if (!repositoryStatus || repositoryStatus.staged.length === 0) {
+            set({ error: "Nenhum arquivo na Stage Area. Selecione os arquivos que deseja commitar primeiro." });
+            return;
+        }
+
         set({ isLoading: true });
         try {
             await gitCommit(selectedRepositoryPath, message);
