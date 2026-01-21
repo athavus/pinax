@@ -8,7 +8,8 @@ import {
     FolderOpen,
     Plus,
     LayoutGrid,
-    Check
+    Check,
+    Trash2
 } from "lucide-react";
 import {
     Dialog,
@@ -26,6 +27,7 @@ export function WorkspaceSelect() {
         selectedWorkspaceId,
         setSelectedWorkspace,
         createWorkspace,
+        deleteWorkspace,
         isLoading
     } = useAppStore();
 
@@ -59,6 +61,13 @@ export function WorkspaceSelect() {
             setNewWorkspaceName("");
             setIsCreateDialogOpen(false);
             setIsOpen(false);
+        }
+    };
+
+    const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+        e.stopPropagation();
+        if (window.confirm(`Are you sure you want to delete workspace "${name}"?`)) {
+            await deleteWorkspace(id);
         }
     };
 
@@ -138,18 +147,25 @@ export function WorkspaceSelect() {
                         <div className="max-h-[240px] overflow-y-auto space-y-1 p-0.5">
                             {workspaces.length > 0 ? (
                                 workspaces.map((workspace) => (
-                                    <button
-                                        key={workspace.id}
-                                        className={cn(
-                                            "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-none outline-none transition-all",
-                                            selectedWorkspaceId === workspace.id ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
-                                        )}
-                                        onClick={() => handleSelect(workspace.id)}
-                                    >
-                                        <Briefcase className="w-4 h-4 opacity-60" />
-                                        <span className="flex-1 truncate text-left">{workspace.name}</span>
-                                        {selectedWorkspaceId === workspace.id && <Check className="w-4 h-4" />}
-                                    </button>
+                                    <div key={workspace.id} className="group/item flex items-center">
+                                        <button
+                                            className={cn(
+                                                "flex-1 flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-none outline-none transition-all",
+                                                selectedWorkspaceId === workspace.id ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                                            )}
+                                            onClick={() => handleSelect(workspace.id)}
+                                        >
+                                            <Briefcase className="w-4 h-4 opacity-60" />
+                                            <span className="flex-1 truncate text-left">{workspace.name}</span>
+                                            {selectedWorkspaceId === workspace.id && <Check className="w-4 h-4" />}
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDelete(e, workspace.id, workspace.name)}
+                                            className="px-3 py-3 text-muted-foreground/20 hover:text-destructive transition-colors group-hover/item:opacity-100 opacity-0"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 ))
                             ) : (
                                 <div className="px-4 py-4 text-center">
@@ -176,27 +192,32 @@ export function WorkspaceSelect() {
                     <DialogHeader>
                         <DialogTitle>Create Workspace</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={handleCreateSubmit} className="space-y-6 pt-6">
-                        <div className="space-y-3">
-                            <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Workspace Name</label>
+                    <form onSubmit={handleCreateSubmit} className="pt-8 space-y-12">
+                        <div>
+                            <label className="block text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-6">
+                                Workspace Name
+                            </label>
                             <input
                                 autoFocus
                                 value={newWorkspaceName}
                                 onChange={(e) => setNewWorkspaceName(e.target.value)}
                                 placeholder="e.g. Frontend, Tools, Personal"
-                                className="w-full px-5 py-4 rounded-none bg-background border border-border/40 focus:outline-none focus:ring-4 focus:ring-primary/20 text-base font-bold shadow-inner"
+                                className="w-full px-6 py-5 rounded-none bg-background border border-border/20 focus:outline-none focus:ring-0 focus:border-primary/50 text-lg font-bold transition-all placeholder:text-muted-foreground/20"
                             />
                         </div>
-                        <DialogFooter>
+                        <DialogFooter className="gap-4 sm:justify-end">
                             <DialogClose asChild>
-                                <button type="button" className="px-6 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">
+                                <button
+                                    type="button"
+                                    className="px-10 py-4 bg-secondary text-secondary-foreground text-[11px] font-black uppercase tracking-[0.2em] hover:bg-secondary/80 transition-all rounded-none shadow-lg shadow-black/10"
+                                >
                                     Cancel
                                 </button>
                             </DialogClose>
                             <button
                                 type="submit"
                                 disabled={!newWorkspaceName.trim() || isLoading}
-                                className="px-8 py-3 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:brightness-110 disabled:opacity-50 transition-all rounded-none"
+                                className="px-10 py-4 bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:brightness-110 disabled:opacity-50 transition-all rounded-none"
                             >
                                 Create
                             </button>

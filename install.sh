@@ -120,7 +120,7 @@ pnpm tauri build --bundles deb
 # ---------- Arch-only packaging (Optional) ----------
 if [ "$PKG_MANAGER" == "pacman" ] && [ -f PKGBUILD ]; then
   echo "Detected PKGBUILD, creating Arch package..."
-  makepkg -si --noconfirm
+  makepkg -fsi --noconfirm
 fi
 
 echo "Done."
