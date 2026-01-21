@@ -144,6 +144,28 @@ async fn git_unstage_file(path: String, file_path: String) -> Result<(), String>
 }
 
 #[tauri::command]
+async fn git_stage_all(path: String) -> Result<(), String> {
+    // Stage both modified and untracked files
+    std::process::Command::new("git")
+        .args(&["add", "-A"])
+        .current_dir(Path::new(&path))
+        .output()
+        .map_err(|e| format!("Failed to stage all: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn git_unstage_all(path: String) -> Result<(), String> {
+    // Unstage all files
+    std::process::Command::new("git")
+        .args(&["reset"])
+        .current_dir(Path::new(&path))
+        .output()
+        .map_err(|e| format!("Failed to unstage all: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn get_file_diff(path: String, file_path: String) -> Result<String, String> {
     git::get_file_diff(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
 }
@@ -269,6 +291,20 @@ SOFTWARE.",
     Ok(())
 }
 
+#[tauri::command]
+async fn setup_github_auth() -> Result<(), String> {
+    let output = std::process::Command::new("gh")
+        .args(&["auth", "setup-git"])
+        .output()
+        .map_err(|e| format!("Failed to execute gh auth setup-git: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("gh auth setup-git failed: {}", stderr));
+    }
+    Ok(())
+}
+
 // ============== GitHub Commands ==============
 
 #[tauri::command]
@@ -385,6 +421,8 @@ pub fn run() {
             git_commit,
             git_stage_file,
             git_unstage_file,
+            git_stage_all,
+            git_unstage_all,
             git_checkout,
             git_create_branch,
             git_create_branch_from_commit,
@@ -412,6 +450,7 @@ pub fn run() {
             open_in_editor,
             open_file_manager,
             generate_templates,
+            setup_github_auth,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

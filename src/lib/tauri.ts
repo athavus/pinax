@@ -92,6 +92,14 @@ export async function gitUnstageFile(path: string, filePath: string): Promise<vo
     return invoke("git_unstage_file", { path, filePath });
 }
 
+export async function gitStageAll(path: string): Promise<void> {
+    return invoke("git_stage_all", { path });
+}
+
+export async function gitUnstageAll(path: string): Promise<void> {
+    return invoke("git_unstage_all", { path });
+}
+
 export async function gitCheckout(path: string, branch: string): Promise<void> {
     return invoke("git_checkout", { path, branch });
 }
@@ -196,4 +204,8 @@ export async function generateTemplates(
     repoName: string
 ): Promise<void> {
     return await invoke("generate_templates", { path, readme, gitignore, license, repoName });
+}
+
+export async function setupGithubAuth(): Promise<void> {
+    return await invoke("setup_github_auth");
 }

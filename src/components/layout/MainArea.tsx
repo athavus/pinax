@@ -72,6 +72,9 @@ export function MainArea() {
         loadCommitFiles,
         stageFile,
         unstageFile,
+        stageAll,
+        unstageAll,
+        setupGithubAuth,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -163,14 +166,14 @@ export function MainArea() {
 
     if (!selectedRepositoryPath || !selectedRepo) {
         return (
-            <main className="flex-1 flex flex-col bg-background/80 backdrop-blur-3xl overflow-hidden border border-border/40 rounded-none m-4 shadow-2xl">
+            <main className="flex-1 flex flex-col bg-background/80 backdrop-blur-3xl overflow-hidden border border-border/40 rounded-none shadow-2xl">
                 <WelcomeView />
             </main>
         );
     }
 
     return (
-        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/10 rounded-[2.5rem] m-4 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
+        <main className="flex-1 flex flex-col bg-background/40 backdrop-blur-3xl overflow-hidden border border-border/10 rounded-none shadow-[0_24px_50px_-12px_rgba(0,0,0,0.3)] animate-in fade-in duration-500 relative">
             {/* Global Error Notification */}
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-500">
@@ -179,6 +182,14 @@ export function MainArea() {
                             <RefreshCw className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-bold text-destructive/90">{error}</span>
+                        {typeof error === "string" && (error.includes("terminal prompts disabled") || error.includes("Username") || error.includes("authentication")) && (
+                            <button
+                                onClick={setupGithubAuth}
+                                className="px-3 py-1 bg-destructive/20 hover:bg-destructive/30 rounded-lg text-[10px] font-black uppercase tracking-widest text-destructive transition-all border border-destructive/20"
+                            >
+                                Fix Auth
+                            </button>
+                        )}
                         <button
                             onClick={clearError}
                             className="ml-2 p-1 hover:bg-destructive/20 rounded-lg transition-colors text-destructive"
@@ -420,9 +431,9 @@ export function MainArea() {
                                                 await stageFile(file.path);
                                             }
                                         }} stagedFiles={repositoryStatus.staged} />
-                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await unstageFile(file.path)} stagedFiles={repositoryStatus.staged} />
-                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} />
-                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} />
+                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await unstageFile(file.path)} stagedFiles={repositoryStatus.staged} onSelectAll={unstageAll} selectAllLabel="Unstage All" />
+                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} onSelectAll={stageAll} selectAllLabel="Stage All" />
+                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} onSelectAll={stageAll} selectAllLabel="Stage All" />
 
                                         {repositoryStatus.staged.length === 0 &&
                                             repositoryStatus.unstaged.length === 0 &&
@@ -834,6 +845,8 @@ function FileList({
     addToGitignore,
     onToggleStage,
     stagedFiles,
+    onSelectAll,
+    selectAllLabel,
 }: {
     title: string;
     files: any[];
@@ -843,12 +856,27 @@ function FileList({
     addToGitignore: (path: string) => void;
     onToggleStage: (file: any) => void;
     stagedFiles: any[];
+    onSelectAll?: () => void;
+    selectAllLabel?: string;
 }) {
     if (files.length === 0) return null;
 
     return (
         <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-300">
-            <h3 className="text-[11px] font-black uppercase text-muted-foreground/40 tracking-[0.2em] px-2 mb-3">{title}</h3>
+            <div className="flex items-center justify-between px-2 mb-3">
+                <h3 className="text-[11px] font-black uppercase text-muted-foreground/40 tracking-[0.2em]">{title}</h3>
+                {onSelectAll && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectAll();
+                        }}
+                        className="text-[9px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors px-2 py-1 bg-primary/5 hover:bg-primary/10 rounded-lg"
+                    >
+                        {selectAllLabel || "Select All"}
+                    </button>
+                )}
+            </div>
             <div className="space-y-1.5">
                 {files.map((file) => {
                     const pathSegments = file.path.split('/');

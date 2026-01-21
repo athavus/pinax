@@ -71,8 +71,8 @@ export function Sidebar() {
                 data-sidebar
                 tabIndex={0}
                 className={cn(
-                    "w-80 min-w-80 h-full flex flex-col bg-sidebar border-r border-sidebar-border/40",
-                    "outline-none transition-all duration-300 rounded-none overflow-hidden m-4 shadow-2xl"
+                    "w-80 min-w-80 h-full flex flex-col bg-sidebar border-border/40 border-r",
+                    "outline-none transition-all duration-300 overflow-hidden"
                 )}
             >
                 <header className="flex flex-col gap-4 px-6 pt-6 pb-4">

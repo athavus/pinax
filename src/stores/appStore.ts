@@ -17,6 +17,8 @@ import {
     gitCommit,
     gitStageFile,
     gitUnstageFile,
+    gitStageAll,
+    gitUnstageAll,
     gitCheckout,
     gitCreateBranch,
     gitUndoCommit,
@@ -39,6 +41,7 @@ import {
     gitClone,
     gitPushInitial,
     generateTemplates,
+    setupGithubAuth as setupGithubAuthTauri,
 } from "@/lib/tauri";
 
 interface AppState {
@@ -102,6 +105,9 @@ interface AppState {
     cherryPickCommit: (hash: string) => Promise<void>;
     stageFile: (filePath: string) => Promise<void>;
     unstageFile: (filePath: string) => Promise<void>;
+    stageAll: () => Promise<void>;
+    unstageAll: () => Promise<void>;
+    setupGithubAuth: () => Promise<void>;
 
 
     // GitHub Integration
@@ -484,6 +490,48 @@ export const useAppStore = create<AppState>((set, get) => ({
             await refreshRepositoryStatus();
         } catch (error) {
             set({ error: `Failed to unstage file: ${error}` });
+        }
+    },
+
+    stageAll: async () => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+
+        set({ isLoading: true });
+        try {
+            await gitStageAll(selectedRepositoryPath);
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Failed to stage all files: ${error}`, isLoading: false });
+        }
+    },
+
+    unstageAll: async () => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+
+        set({ isLoading: true });
+        try {
+            await gitUnstageAll(selectedRepositoryPath);
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Failed to unstage all files: ${error}`, isLoading: false });
+        }
+    },
+
+    setupGithubAuth: async () => {
+        set({ isLoading: true });
+        try {
+            await setupGithubAuthTauri();
+            set({
+                isLoading: false,
+                successAlert: {
+                    title: "Authentication Configured",
+                    message: "Git has been successfully configured to use GitHub CLI for authentication."
+                }
+            });
+        } catch (error) {
+            set({ error: `Failed to configure Git auth: ${error}`, isLoading: false });
         }
     },
 
