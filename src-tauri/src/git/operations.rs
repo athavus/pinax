@@ -61,14 +61,65 @@ pub async fn push(path: &Path) -> GitResult<()> {
     Ok(())
 }
 
-/// Stage all and commit changes
+/// Push changes to a new remote (initial push with upstream tracking)
+/// Auto-detects the current branch name
+pub async fn push_initial(path: &Path) -> GitResult<()> {
+    // Get current branch name
+    let branch = execute_string(path, &["rev-parse", "--abbrev-ref", "HEAD"]).await
+        .unwrap_or_else(|_| "main".to_string());
+    
+    let output = execute(path, &["push", "-u", "origin", &branch]).await?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("push -u origin {}", branch),
+        });
+    }
+    
+    Ok(())
+}
+
+/// Stage a file
+pub async fn stage_file(path: &Path, file_path: &str) -> GitResult<()> {
+    let output = execute(path, &["add", file_path]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("add {}", file_path),
+        });
+    }
+    Ok(())
+}
+
+/// Unstage a file
+pub async fn unstage_file(path: &Path, file_path: &str) -> GitResult<()> {
+    // If it's a new file (untracked), we use a different reset command or just remove it from index
+    // But 'git reset HEAD <file>' works for both modified and added files
+    let output = execute(path, &["reset", "HEAD", "--", file_path]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("reset HEAD -- {}", file_path),
+        });
+    }
+    Ok(())
+}
+
+/// Commit staged changes
 pub async fn commit(path: &Path, message: &str) -> GitResult<()> {
-    // Stage all changes first
-    execute(path, &["add", "-A"]).await?;
-    // Then commit
+    // Just commit what is currently staged
     let output = execute(path, &["commit", "-m", message]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        // Special case: nothing to commit
+        if stderr.contains("nothing to commit") {
+            return Ok(());
+        }
+        
         return Err(GitError {
             message: stderr.to_string(),
             command: "commit".to_string(),

@@ -22,6 +22,11 @@ async fn scan_repositories(path: String) -> Result<Vec<Repository>, String> {
     repository::scan_repositories(Path::new(&path)).await
 }
 
+#[tauri::command]
+async fn get_repository_info(path: String) -> Result<Repository, String> {
+    repository::get_repository_info(Path::new(&path)).await
+}
+
 /// Get the status of a Git repository
 #[tauri::command]
 async fn get_repository_status(path: String) -> Result<RepositoryStatus, String> {
@@ -129,6 +134,16 @@ async fn git_resolve_conflict(path: String, file_path: String, resolution: Strin
 }
 
 #[tauri::command]
+async fn git_stage_file(path: String, file_path: String) -> Result<(), String> {
+    git::stage_file(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_unstage_file(path: String, file_path: String) -> Result<(), String> {
+    git::unstage_file(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn get_file_diff(path: String, file_path: String) -> Result<String, String> {
     git::get_file_diff(Path::new(&path), &file_path).await.map_err(|e| e.to_string())
 }
@@ -186,6 +201,16 @@ async fn git_remote_set_url(path: String, name: String, url: String) -> Result<(
 #[tauri::command]
 async fn git_clone(url: String, path: String) -> Result<(), String> {
     git::clone(&url, Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn git_push_initial(path: String) -> Result<(), String> {
+    git::push_initial(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn path_exists(path: String) -> Result<bool, String> {
+    Ok(Path::new(&path).exists())
 }
 
 #[tauri::command]
@@ -349,6 +374,7 @@ pub fn run() {
             scan_repositories,
             get_repository_status,
             list_branches,
+            get_repository_info,
             get_workspaces,
             create_workspace,
             delete_workspace,
@@ -357,6 +383,8 @@ pub fn run() {
             git_pull,
             git_push,
             git_commit,
+            git_stage_file,
+            git_unstage_file,
             git_checkout,
             git_create_branch,
             git_create_branch_from_commit,
@@ -378,6 +406,8 @@ pub fn run() {
             git_remote_add,
             git_remote_set_url,
             git_clone,
+            git_push_initial,
+            path_exists,
             open_terminal,
             open_in_editor,
             open_file_manager,

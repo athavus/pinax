@@ -21,6 +21,13 @@ export async function getRepositoryStatus(path: string): Promise<RepositoryStatu
 }
 
 /**
+ * Get metadata for a single repository
+ */
+export async function getRepositoryInfo(path: string): Promise<Repository> {
+    return invoke<Repository>("get_repository_info", { path });
+}
+
+/**
  * List all branches in a repository
  */
 export async function listBranches(path: string): Promise<Branch[]> {
@@ -69,8 +76,20 @@ export async function gitPush(path: string): Promise<void> {
     return invoke("git_push", { path });
 }
 
+export async function gitPushInitial(path: string): Promise<void> {
+    return invoke("git_push_initial", { path });
+}
+
 export async function gitCommit(path: string, message: string): Promise<void> {
     return invoke("git_commit", { path, message });
+}
+
+export async function gitStageFile(path: string, filePath: string): Promise<void> {
+    return invoke("git_stage_file", { path, filePath });
+}
+
+export async function gitUnstageFile(path: string, filePath: string): Promise<void> {
+    return invoke("git_unstage_file", { path, filePath });
 }
 
 export async function gitCheckout(path: string, branch: string): Promise<void> {

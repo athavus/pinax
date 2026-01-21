@@ -70,6 +70,8 @@ export function MainArea() {
         selectedCommitHash,
         selectedCommitFiles,
         loadCommitFiles,
+        stageFile,
+        unstageFile,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -411,10 +413,16 @@ export function MainArea() {
                             <div className="p-3 space-y-6">
                                 {repositoryStatus && (
                                     <>
-                                        <FileList title="Conflicts" files={repositoryStatus.conflicts} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
-                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
-                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
-                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} />
+                                        <FileList title="Conflicts" files={repositoryStatus.conflicts} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => {
+                                            if (repositoryStatus.staged.some(s => s.path === file.path)) {
+                                                await unstageFile(file.path);
+                                            } else {
+                                                await stageFile(file.path);
+                                            }
+                                        }} stagedFiles={repositoryStatus.staged} />
+                                        <FileList title="Staged" files={repositoryStatus.staged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await unstageFile(file.path)} stagedFiles={repositoryStatus.staged} />
+                                        <FileList title="Modified" files={repositoryStatus.unstaged} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} />
+                                        <FileList title="Untracked" files={repositoryStatus.untracked.map(p => ({ path: p, status: "untracked" as any }))} onFileSelect={setSelectedFile} selectedFile={selectedFile} discardChanges={discardChanges} addToGitignore={addToGitignore} onToggleStage={async (file) => await stageFile(file.path)} stagedFiles={repositoryStatus.staged} />
 
                                         {repositoryStatus.staged.length === 0 &&
                                             repositoryStatus.unstaged.length === 0 &&
@@ -824,6 +832,8 @@ function FileList({
     selectedFile,
     discardChanges,
     addToGitignore,
+    onToggleStage,
+    stagedFiles,
 }: {
     title: string;
     files: any[];
@@ -831,6 +841,8 @@ function FileList({
     selectedFile: string | null;
     discardChanges: (path: string) => void;
     addToGitignore: (path: string) => void;
+    onToggleStage: (file: any) => void;
+    stagedFiles: any[];
 }) {
     if (files.length === 0) return null;
 
@@ -850,35 +862,60 @@ function FileList({
                     return (
                         <ContextMenu key={file.path}>
                             <ContextMenuTrigger asChild>
-                                <button
-                                    onClick={() => onFileSelect(file.path)}
-                                    className={cn(
-                                        "w-full flex items-center gap-4 px-4 py-3 text-left group border border-transparent rounded-none",
-                                        selectedFile === file.path
-                                            ? "bg-primary/20 border-primary/30 text-primary shadow-lg shadow-primary/5"
-                                            : "hover:bg-primary/10 text-muted-foreground/80 hover:text-foreground"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "w-2 h-2 rounded-full shrink-0 shadow-sm",
-                                        file.status === "added" || file.status === "untracked" ? "bg-[hsl(var(--git-added))]" :
-                                            file.status === "modified" ? "bg-[hsl(var(--git-modified))]" :
-                                                file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" :
-                                                    file.status === "conflicted" ? "bg-destructive animate-pulse" : "bg-muted-foreground"
-                                    )} />
-                                    <span className="text-sm font-bold truncate flex-1">{file.path}</span>
-                                    {file.status && (
-                                        <span className={cn(
-                                            "text-[10px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100",
-                                            file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
-                                                file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
-                                                    file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :
-                                                        file.status === "conflicted" ? "text-destructive" : ""
+                                <div className="flex items-center w-full group overflow-hidden first:rounded-t-xl last:rounded-b-xl">
+                                    {/* Selective Staging Checkbox */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onToggleStage(file);
+                                        }}
+                                        className={cn(
+                                            "w-10 h-[46px] flex items-center justify-center transition-all border-r border-transparent shrink-0",
+                                            stagedFiles.some(s => s.path === file.path)
+                                                ? "bg-primary/10 text-primary border-primary/20"
+                                                : "bg-white/[0.02] text-muted-foreground/20 hover:text-muted-foreground/40 hover:bg-white/[0.04]"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-3.5 h-3.5 border transition-all flex items-center justify-center rounded-none",
+                                            stagedFiles.some(s => s.path === file.path)
+                                                ? "bg-primary border-primary text-primary-foreground"
+                                                : "border-muted-foreground/20"
                                         )}>
-                                            {file.status}
-                                        </span>
-                                    )}
-                                </button>
+                                            {stagedFiles.some(s => s.path === file.path) && <Check className="w-2.5 h-2.5 stroke-[4]" />}
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => onFileSelect(file.path)}
+                                        className={cn(
+                                            "flex-1 flex items-center gap-4 px-4 py-3 text-left transition-all relative overflow-hidden",
+                                            selectedFile === file.path
+                                                ? "bg-primary/20 border-l-2 border-primary text-primary"
+                                                : "hover:bg-primary/5 text-muted-foreground/80 hover:text-foreground"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full shrink-0 shadow-sm",
+                                            file.status === "added" || file.status === "untracked" ? "bg-[hsl(var(--git-added))]" :
+                                                file.status === "modified" ? "bg-[hsl(var(--git-modified))]" :
+                                                    file.status === "deleted" ? "bg-[hsl(var(--git-deleted))]" :
+                                                        file.status === "conflicted" ? "bg-destructive animate-pulse" : "bg-muted-foreground"
+                                        )} />
+                                        <span className="text-xs font-bold truncate flex-1 font-mono tracking-tight">{file.path}</span>
+                                        {file.status && (
+                                            <span className={cn(
+                                                "text-[9px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity",
+                                                file.status === "added" || file.status === "untracked" ? "text-[hsl(var(--git-added))]" :
+                                                    file.status === "modified" ? "text-[hsl(var(--git-modified))]" :
+                                                        file.status === "deleted" ? "text-[hsl(var(--git-deleted))]" :
+                                                            file.status === "conflicted" ? "text-destructive" : ""
+                                            )}>
+                                                {file.status}
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
                             </ContextMenuTrigger>
                             <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
                                 <ContextMenuItem

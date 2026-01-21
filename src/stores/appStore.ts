@@ -7,6 +7,7 @@ import { create } from "zustand";
 import type { Repository, RepositoryStatus, Workspace, NavigationContext, Branch, CommitInfo, FileChange } from "@/types";
 import {
     getRepositoryStatus,
+    getRepositoryInfo,
     getWorkspaces,
     scanRepositories,
     createWorkspace,
@@ -14,6 +15,8 @@ import {
     gitPull,
     gitPush,
     gitCommit,
+    gitStageFile,
+    gitUnstageFile,
     gitCheckout,
     gitCreateBranch,
     gitUndoCommit,
@@ -34,6 +37,7 @@ import {
     gitRemoteAdd,
     gitRemoteSetUrl,
     gitClone,
+    gitPushInitial,
     generateTemplates,
 } from "@/lib/tauri";
 
@@ -96,6 +100,8 @@ interface AppState {
     revertCommit: (hash: string) => Promise<void>;
     resetToCommit: (hash: string) => Promise<void>;
     cherryPickCommit: (hash: string) => Promise<void>;
+    stageFile: (filePath: string) => Promise<void>;
+    unstageFile: (filePath: string) => Promise<void>;
 
 
     // GitHub Integration
@@ -459,6 +465,28 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
+    stageFile: async (filePath) => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+        try {
+            await gitStageFile(selectedRepositoryPath, filePath);
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Failed to stage file: ${error}` });
+        }
+    },
+
+    unstageFile: async (filePath) => {
+        const { selectedRepositoryPath, refreshRepositoryStatus } = get();
+        if (!selectedRepositoryPath) return;
+        try {
+            await gitUnstageFile(selectedRepositoryPath, filePath);
+            await refreshRepositoryStatus();
+        } catch (error) {
+            set({ error: `Failed to unstage file: ${error}` });
+        }
+    },
+
     createGithubRepository: async (token, name, description, isPrivate) => {
         set({ isLoading: true });
         try {
@@ -490,31 +518,66 @@ export const useAppStore = create<AppState>((set, get) => ({
                 );
             }
 
-            // 4. Add remote
+            // 4. Add remote with token for authentication
+            // clone_url format: https://github.com/user/repo.git
+            const authenticatedUrl = ghRepo.clone_url.replace("https://", `https://${token}@`);
+
             try {
-                await gitRemoteAdd(localPath, "origin", ghRepo.clone_url);
+                await gitRemoteAdd(localPath, "origin", authenticatedUrl);
             } catch (e) {
                 // If remote already exists, try to set it
-                await gitRemoteSetUrl(localPath, "origin", ghRepo.clone_url);
+                await gitRemoteSetUrl(localPath, "origin", authenticatedUrl);
             }
 
-            // 5. Initial commit and push (if there are files)
-            const status = await getRepositoryStatus(localPath);
-            if (status.untracked.length > 0 || status.unstaged.length > 0 || (templates && (templates.readme || templates.gitignore !== "" || templates.license))) {
-                await gitCommit(localPath, "Initial commit from Pinax");
+            // 5. Initial commit (if there are files)
+            try {
+                const status = await getRepositoryStatus(localPath);
+                if (status.untracked.length > 0 || status.unstaged.length > 0 || (templates && (templates.readme || templates.gitignore !== "" || templates.license))) {
+                    await gitCommit(localPath, "Initial commit from Pinax");
+                }
+            } catch (e) {
+                console.warn("Initial commit failed:", e);
             }
 
-            await gitPush(localPath);
+            // 6. Push with token auth (now handled by the remote URL)
+            let pushError = null;
+            try {
+                await gitPushInitial(localPath);
+            } catch (e) {
+                console.error("Initial push failed:", e);
+                pushError = e;
+            }
 
-            // 6. Add to current workspace if needed, and select it
-            const workspaceId = get().selectedWorkspaceId || "uncategorized";
-            await addRepositoryToWorkspace(workspaceId, localPath);
-            await get().loadWorkspaces();
+            // 7. Add to current workspace and update state regardless of push success
+            const workspaceId = get().selectedWorkspaceId;
+            if (workspaceId && workspaceId !== "uncategorized") {
+                try {
+                    await addRepositoryToWorkspace(workspaceId, localPath);
+                } catch (e) {
+                    console.warn(`Failed to add to workspace ${workspaceId}:`, e);
+                }
+            }
+
             await get().setSelectedRepository(localPath);
+
+            // Update local state for immediate UI refresh
+            try {
+                const newRepo = await getRepositoryInfo(localPath);
+                const { repositories } = get();
+                if (!repositories.some(r => r.path === localPath)) {
+                    set({ repositories: [...repositories, newRepo].sort((a, b) => a.name.localeCompare(b.name)) });
+                }
+            } catch (e) {
+                console.error("Failed to fetch new repository info:", e);
+                await get().loadWorkspaces();
+            }
 
             set({
                 isLoading: false,
-                successAlert: {
+                successAlert: pushError ? {
+                    title: "Created Locally",
+                    message: `Successfully created "${name}" locally, but initial push to GitHub failed. You can push manually once you check your credentials.`
+                } : {
                     title: "Repository Published",
                     message: `Successfully created and published "${name}" to GitHub.`
                 }
@@ -530,11 +593,27 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             await gitClone(url, localPath);
 
-            const workspaceId = get().selectedWorkspaceId || "uncategorized";
-            await addRepositoryToWorkspace(workspaceId, localPath);
-
-            await get().loadWorkspaces();
+            const workspaceId = get().selectedWorkspaceId;
+            if (workspaceId && workspaceId !== "uncategorized") {
+                try {
+                    await addRepositoryToWorkspace(workspaceId, localPath);
+                } catch (e) {
+                    console.warn(`Failed to add to workspace ${workspaceId}:`, e);
+                }
+            }
             await get().setSelectedRepository(localPath);
+
+            // Fetch info and update state
+            try {
+                const newRepo = await getRepositoryInfo(localPath);
+                const { repositories } = get();
+                if (!repositories.some(r => r.path === localPath)) {
+                    set({ repositories: [...repositories, newRepo].sort((a, b) => a.name.localeCompare(b.name)) });
+                }
+            } catch (e) {
+                console.error("Failed to fetch new repository info:", e);
+                await get().loadWorkspaces();
+            }
 
             set({
                 isLoading: false,
@@ -552,11 +631,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     addLocalRepository: async (localPath) => {
         set({ isLoading: true });
         try {
-            const workspaceId = get().selectedWorkspaceId || "uncategorized";
-            await addRepositoryToWorkspace(workspaceId, localPath);
-
-            await get().loadWorkspaces();
+            const workspaceId = get().selectedWorkspaceId;
+            if (workspaceId && workspaceId !== "uncategorized") {
+                try {
+                    await addRepositoryToWorkspace(workspaceId, localPath);
+                } catch (e) {
+                    console.warn(`Failed to add to workspace ${workspaceId}:`, e);
+                }
+            }
             await get().setSelectedRepository(localPath);
+
+            // Fetch info and update state
+            try {
+                const newRepo = await getRepositoryInfo(localPath);
+                const { repositories } = get();
+                if (!repositories.some(r => r.path === localPath)) {
+                    set({ repositories: [...repositories, newRepo].sort((a, b) => a.name.localeCompare(b.name)) });
+                }
+            } catch (e) {
+                console.error("Failed to fetch new repository info:", e);
+                await get().loadWorkspaces();
+            }
 
             set({
                 isLoading: false,
@@ -574,6 +669,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     clearSuccessAlert: () => set({ successAlert: null }),
 
     addRepositoryToWorkspace: async (workspaceId, repoPath) => {
+        if (workspaceId === "uncategorized") return;
         try {
             await addRepositoryToWorkspace(workspaceId, repoPath);
             await get().loadWorkspaces();

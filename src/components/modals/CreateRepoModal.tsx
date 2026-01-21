@@ -22,7 +22,7 @@ interface CreateRepoModalProps {
 }
 
 export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalProps) {
-    const { publishRepository, isLoading, settings } = useAppStore();
+    const { publishRepository, isLoading, settings, error, clearError } = useAppStore();
 
     const [name, setName] = useState("");
     const [localPath, setLocalPath] = useState("");
@@ -36,10 +36,13 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
     const [addLicense, setAddLicense] = useState(true);
 
     useEffect(() => {
-        if (isOpen && settings.githubToken) {
-            setToken(settings.githubToken);
+        if (isOpen) {
+            clearError();
+            if (settings.githubToken) {
+                setToken(settings.githubToken);
+            }
         }
-    }, [isOpen, settings.githubToken]);
+    }, [isOpen, settings.githubToken, clearError]);
 
     const handleBrowse = async () => {
         try {
@@ -84,13 +87,20 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                     license: addLicense
                 }
             );
-            onOpenChange(false);
-            setName("");
-            setLocalPath("");
-            setDescription("");
-            setIsPrivate(false);
+
+            // Only close if no error was set in the store during publish
+            // (The error state in the store is updated inside publishRepository)
+            const currentError = useAppStore.getState().error;
+            if (!currentError) {
+                onOpenChange(false);
+                setName("");
+                setLocalPath("");
+                setDescription("");
+                setIsPrivate(false);
+            }
         } catch (error) {
-            console.error("Publishing failed:", error);
+            console.error("Publishing failed in modal:", error);
+            // Error is already handled/set in the store by publishRepository
         }
     };
 
@@ -251,6 +261,13 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                 </span>
                             </button>
                         </div>
+
+                        {/* Error Message */}
+                        {error && (
+                            <div className="px-5 py-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed animate-in fade-in slide-in-from-top-1">
+                                {error}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -274,6 +291,6 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                     </button>
                 </DialogFooter>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

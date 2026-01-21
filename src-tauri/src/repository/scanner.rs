@@ -98,3 +98,24 @@ async fn get_remote_url(repo_path: &Path) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())
 }
+
+/// Get metadata for a single repository
+pub async fn get_repository_info(path: &Path) -> Result<Repository, String> {
+    if !git::is_git_repo(path).await {
+        return Err("Not a Git repository".to_string());
+    }
+
+    let name = path
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let remote_url = get_remote_url(path).await.ok();
+
+    Ok(Repository {
+        path: path.to_string_lossy().to_string(),
+        name,
+        remote_url,
+        last_commit: None,
+    })
+}
