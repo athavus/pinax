@@ -525,6 +525,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             await setupGithubAuthTauri();
             set({
                 isLoading: false,
+                error: null,
                 successAlert: {
                     title: "Authentication Configured",
                     message: "Git has been successfully configured to use GitHub CLI for authentication."
