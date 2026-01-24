@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { md5 } from "@/lib/md5";
 import { WelcomeView } from "./WelcomeView";
+import { MergeConflictModal } from "@/components/modals/MergeConflictModal";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -75,6 +76,8 @@ export function MainArea() {
         stageAll,
         unstageAll,
         setupGithubAuth,
+        mergeConflictModalOpen,
+        setMergeConflictModalOpen,
     } = useAppStore();
 
     const [commitMessage, setCommitMessage] = React.useState("");
@@ -707,6 +710,12 @@ export function MainArea() {
                     )}
                 </div>
             </div>
+
+            {/* Merge Conflict Modal */}
+            <MergeConflictModal
+                open={mergeConflictModalOpen}
+                onOpenChange={setMergeConflictModalOpen}
+            />
         </main >
     );
 }

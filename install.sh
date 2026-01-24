@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
+echo "Instalando Pinax..."
+echo ""
+
 # ---------- Detect distro ----------
 if [ -f /etc/os-release ]; then
   . /etc/os-release
 else
-  echo "cannot detect Linux distribution."
+  echo "❌ Não foi possível detectar a distribuição Linux."
   exit 1
 fi
 
@@ -25,15 +28,16 @@ case "$ID" in
     PKG_MANAGER="zypper"
     ;;
   *)
-    echo "unsupported distro ($ID). Install dependencies manually."
+    echo "❌ Distribuição não suportada ($ID). Instale as dependências manualmente."
     exit 1
     ;;
 esac
 
-echo "detected distro: $PRETTY_NAME"
+echo "✅ Distribuição detectada: $PRETTY_NAME"
+echo ""
 
-# ---------- Install System Dependencies (Tauri + AppImage) ----------
-echo "Installing system dependencies..."
+# ---------- Install System Dependencies ----------
+echo "📦 Instalando dependências do sistema..."
 case "$PKG_MANAGER" in
   pacman)
     sudo pacman -Sy --needed --noconfirm \
@@ -72,20 +76,23 @@ case "$PKG_MANAGER" in
       librsvg-devel
     ;;
 esac
+echo "✅ Dependências do sistema instaladas!"
+echo ""
 
 # ---------- Install Rust ----------
 if ! command -v rustc >/dev/null 2>&1; then
-  echo "Rust not found. Installing via rustup..."
+  echo "Rust não encontrado. Instalando via rustup..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
+  echo "✅ Rust instalado!"
 else
-  echo "Rust is already installed."
+  echo "✅ Rust já está instalado."
 fi
+echo ""
 
 # ---------- Install Node.js & pnpm ----------
 if ! command -v node >/dev/null 2>&1; then
-  echo "node-js not found. Installing..."
-
+  echo "📦 Node.js não encontrado. Instalando..."
   case "$PKG_MANAGER" in
     pacman)
       sudo pacman -S --needed --noconfirm nodejs npm
@@ -100,27 +107,51 @@ if ! command -v node >/dev/null 2>&1; then
       sudo zypper install -y nodejs npm
       ;;
   esac
+  echo "✅ Node.js instalado!"
+else
+  echo "✅ Node.js já está instalado."
 fi
+echo ""
 
 if ! command -v pnpm >/dev/null 2>&1; then
-  echo "pnpm not found. Installing..."
+  echo "📦 pnpm não encontrado. Instalando..."
   if command -v corepack >/dev/null 2>&1; then
     sudo corepack enable
     sudo corepack prepare pnpm@latest --activate
   else
     sudo npm install -g pnpm
   fi
+  echo "✅ pnpm instalado!"
+else
+  echo "✅ pnpm já está instalado."
 fi
+echo ""
 
 # ---------- Install Project Dependencies ----------
+echo "📥 Instalando dependências do projeto..."
 pnpm install
+echo "✅ Dependências instaladas!"
+echo ""
 
+# ---------- Build ----------
+echo "🔨 Compilando o projeto..."
 pnpm tauri build --bundles deb
+echo "✅ Compilação concluída!"
+echo ""
 
 # ---------- Arch-only packaging (Optional) ----------
 if [ "$PKG_MANAGER" == "pacman" ] && [ -f PKGBUILD ]; then
-  echo "Detected PKGBUILD, creating Arch package..."
+  echo "📦 Criando pacote Arch Linux..."
   makepkg -fsi --noconfirm
+  echo "✅ Pacote Arch criado e instalado!"
 fi
 
-echo "Done."
+echo ""
+echo "Pinax instalado com sucesso!"
+echo ""
+echo "Para executar em modo de desenvolvimento:"
+echo "  pnpm tauri dev"
+echo ""
+echo "Para executar a versão compilada:"
+echo "  ./src-tauri/target/release/pinax"
+echo ""

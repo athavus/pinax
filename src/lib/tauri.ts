@@ -223,3 +223,15 @@ export async function detectEditors(): Promise<EditorInfo[]> {
 export async function openInEditor(path: String, preferredEditor?: String): Promise<void> {
     return await invoke("open_in_editor", { path, preferredEditor });
 }
+
+export async function isRebaseOrMergeInProgress(path: string): Promise<boolean> {
+    return invoke<boolean>("is_rebase_or_merge_in_progress", { path });
+}
+
+export async function continueRebaseOrMerge(path: string): Promise<void> {
+    return invoke("continue_rebase_or_merge", { path });
+}
+
+export async function abortRebaseOrMerge(path: string): Promise<void> {
+    return invoke("abort_rebase_or_merge", { path });
+}

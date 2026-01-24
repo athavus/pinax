@@ -71,6 +71,7 @@ interface AppState {
     selectedCommitFiles: FileChange[];
     hiddenRepositories: string[];
     error: string | null;
+    mergeConflictModalOpen: boolean;
 
     // Settings
     settings: {
@@ -138,6 +139,7 @@ interface AppState {
     pollRepositoryStatus: () => Promise<void>;
     clearError: () => void;
     updateSettings: (settings: Partial<AppState["settings"]>) => void;
+    setMergeConflictModalOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -161,6 +163,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     hiddenRepositories: JSON.parse(localStorage.getItem("hidden_repositories") || "[]"),
     error: null,
     successAlert: null,
+    mergeConflictModalOpen: false,
 
     // Initial settings from localStorage
     settings: {
@@ -276,9 +279,22 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPull(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isPulling: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
+            
+            // Check for conflicts and open modal if needed
+            if (status.conflicts.length > 0) {
+                set({ mergeConflictModalOpen: true });
+            }
+            
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Pull failed: ${error}`, isPulling: false, isLoading: false });
+            const errorMessage = String(error);
+            // Check if error is due to conflicts
+            if (errorMessage.includes("conflict") || errorMessage.includes("CONFLICT") || errorMessage.includes("conflito")) {
+                const status = await getRepositoryStatus(selectedRepositoryPath);
+                set({ repositoryStatus: status, mergeConflictModalOpen: true, isPulling: false, isLoading: false });
+            } else {
+                set({ error: `Pull failed: ${error}`, isPulling: false, isLoading: false });
+            }
         }
     },
 
@@ -290,11 +306,33 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPush(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isPushing: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
+            
+            // Check for conflicts and open modal if needed
+            if (status.conflicts.length > 0) {
+                set({ mergeConflictModalOpen: true });
+            }
+            
             await get().loadHistory();
         } catch (error) {
             const errorMessage = String(error);
             if (errorMessage.includes("non-fast-forward") || errorMessage.includes("rejected")) {
-                set({ error: "Push rejected: Remote changes detected. Please pull first.", isPushing: false, isLoading: false });
+                // Try to pull first, which might cause conflicts
+                try {
+                    await gitPull(selectedRepositoryPath);
+                    const status = await getRepositoryStatus(selectedRepositoryPath);
+                    if (status.conflicts.length > 0) {
+                        set({ repositoryStatus: status, mergeConflictModalOpen: true, isPushing: false, isLoading: false });
+                    } else {
+                        set({ error: "Push rejected: Remote changes detected. Please pull first.", isPushing: false, isLoading: false });
+                    }
+                } catch (pullError) {
+                    const status = await getRepositoryStatus(selectedRepositoryPath);
+                    if (status.conflicts.length > 0) {
+                        set({ repositoryStatus: status, mergeConflictModalOpen: true, isPushing: false, isLoading: false });
+                    } else {
+                        set({ error: "Push rejected: Remote changes detected. Please pull first.", isPushing: false, isLoading: false });
+                    }
+                }
             } else {
                 set({ error: `Push failed: ${errorMessage}`, isPushing: false, isLoading: false });
             }
@@ -896,4 +934,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         set({ settings: updatedSettings });
     },
+
+    setMergeConflictModalOpen: (open) => set({ mergeConflictModalOpen: open }),
 }));

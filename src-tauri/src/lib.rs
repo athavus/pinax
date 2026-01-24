@@ -232,6 +232,21 @@ async fn git_push_initial(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn is_rebase_or_merge_in_progress(path: String) -> Result<bool, String> {
+    git::is_rebase_or_merge_in_progress(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn continue_rebase_or_merge(path: String) -> Result<(), String> {
+    git::continue_rebase_or_merge(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn abort_rebase_or_merge(path: String) -> Result<(), String> {
+    git::abort_rebase_or_merge(Path::new(&path)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn path_exists(path: String) -> Result<bool, String> {
     Ok(Path::new(&path).exists())
 }
@@ -469,6 +484,9 @@ pub fn run() {
             generate_templates,
             setup_github_auth,
             detect_editors,
+            is_rebase_or_merge_in_progress,
+            continue_rebase_or_merge,
+            abort_rebase_or_merge,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

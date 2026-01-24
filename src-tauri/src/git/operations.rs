@@ -386,3 +386,79 @@ pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
     }
     Ok(())
 }
+
+/// Check if there's a rebase or merge in progress
+pub async fn is_rebase_or_merge_in_progress(path: &Path) -> GitResult<bool> {
+    let git_dir = path.join(".git");
+    let rebase_apply = git_dir.join("rebase-apply");
+    let rebase_merge = git_dir.join("rebase-merge");
+    let merge_head = git_dir.join("MERGE_HEAD");
+    let rebase_head = git_dir.join("REBASE_HEAD");
+    
+    Ok(rebase_apply.exists() || rebase_merge.exists() || merge_head.exists() || rebase_head.exists())
+}
+
+/// Continue a rebase or merge after resolving conflicts
+pub async fn continue_rebase_or_merge(path: &Path) -> GitResult<()> {
+    // Check if we're in a rebase
+    let git_dir = path.join(".git");
+    let rebase_apply = git_dir.join("rebase-apply");
+    let rebase_merge = git_dir.join("rebase-merge");
+    
+    if rebase_apply.exists() || rebase_merge.exists() {
+        // Continue rebase
+        let output = execute(path, &["rebase", "--continue"]).await?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(GitError {
+                message: stderr.to_string(),
+                command: "rebase --continue".to_string(),
+                exit_code: output.status.code(),
+            });
+        }
+    } else {
+        // Continue merge
+        let output = execute(path, &["merge", "--continue"]).await?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(GitError {
+                message: stderr.to_string(),
+                command: "merge --continue".to_string(),
+                exit_code: output.status.code(),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Abort a rebase or merge
+pub async fn abort_rebase_or_merge(path: &Path) -> GitResult<()> {
+    let git_dir = path.join(".git");
+    let rebase_apply = git_dir.join("rebase-apply");
+    let rebase_merge = git_dir.join("rebase-merge");
+    
+    if rebase_apply.exists() || rebase_merge.exists() {
+        // Abort rebase
+        let output = execute(path, &["rebase", "--abort"]).await?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(GitError {
+                message: stderr.to_string(),
+                command: "rebase --abort".to_string(),
+                exit_code: output.status.code(),
+            });
+        }
+    } else {
+        // Abort merge
+        let output = execute(path, &["merge", "--abort"]).await?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(GitError {
+                message: stderr.to_string(),
+                command: "merge --abort".to_string(),
+                exit_code: output.status.code(),
+            });
+        }
+    }
+    Ok(())
+}

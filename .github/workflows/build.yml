@@ -1,0 +1,61 @@
+name: Build Pinax
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'linux'
+            args: '--bundles deb appimage'
+          - platform: 'windows'
+            args: '--bundles msi'
+          - platform: 'macos'
+            args: '--bundles dmg'
+
+    runs-on: ${{ matrix.platform == 'macos' && 'macos-latest' || matrix.platform == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.0-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm tauri build ${{ matrix.args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinax-${{ matrix.platform }}
+          path: src-tauri/target/release/bundle/
+

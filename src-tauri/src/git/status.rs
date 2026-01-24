@@ -36,14 +36,80 @@ pub async fn get_status(repo_path: &Path) -> GitResult<RepositoryStatus> {
 
 /// Get the current branch name
 async fn get_current_branch(repo_path: &Path) -> GitResult<String> {
-    match execute_string(repo_path, &["rev-parse", "--abbrev-ref", "HEAD"]).await {
-        Ok(branch) => Ok(branch),
-        Err(e) => {
-            // Handle empty repository (no commits yet)
-            if e.to_string().contains("ambiguous argument 'HEAD'") || e.to_string().contains("unknown revision") {
-                return Ok("No Branch".to_string());
+    // First try to get branch name using symbolic-ref (works when on a branch)
+    match execute_string(repo_path, &["symbolic-ref", "--short", "HEAD"]).await {
+        Ok(branch) => {
+            // Clean up any whitespace
+            Ok(branch.trim().to_string())
+        }
+        Err(_) => {
+            // If symbolic-ref fails (detached HEAD), try to get branch name from git status
+            // git status shows "## HEAD detached at <branch>" when in detached HEAD state
+            match execute_string(repo_path, &["status", "--porcelain=branch", "-b"]).await {
+                Ok(status) => {
+                    // Look for "## HEAD detached at" pattern
+                    for line in status.lines() {
+                        if line.starts_with("## ") {
+                            if line.contains("HEAD detached at") {
+                                // Extract branch name after "at "
+                                if let Some(start) = line.find("at ") {
+                                    let branch_name = line[start + 3..].trim();
+                                    // Remove any trailing information (like commit hash)
+                                    let branch_name = branch_name.split_whitespace().next().unwrap_or(branch_name);
+                                    // Remove any quotes or special characters
+                                    let branch_name = branch_name.trim_matches('"').trim_matches('\'');
+                                    return Ok(branch_name.to_string());
+                                }
+                            } else if line.starts_with("## ") && !line.contains("HEAD") {
+                                // Normal branch status like "## feature/my-branch"
+                                let branch_part = line.trim_start_matches("## ");
+                                if let Some(branch) = branch_part.split_whitespace().next() {
+                                    return Ok(branch.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(_) => {}
             }
-            Err(e)
+            
+            // Fallback: try rev-parse --abbrev-ref HEAD
+            match execute_string(repo_path, &["rev-parse", "--abbrev-ref", "HEAD"]).await {
+                Ok(branch) => {
+                    let branch = branch.trim();
+                    if branch == "HEAD" {
+                        // Still HEAD, try to get from reflog
+                        match execute_string(repo_path, &["log", "-1", "--pretty=format:%D"]).await {
+                            Ok(refs) => {
+                                // Look for branch names in the refs
+                                for part in refs.split(',') {
+                                    let part = part.trim();
+                                    if part.starts_with("HEAD -> ") {
+                                        return Ok(part[8..].to_string());
+                                    }
+                                    if !part.contains("HEAD") && !part.contains("tag:") && part.contains('/') {
+                                        // Extract branch name
+                                        if let Some(branch) = part.split('/').last() {
+                                            return Ok(branch.trim().to_string());
+                                        }
+                                    }
+                                }
+                            }
+                            Err(_) => {}
+                        }
+                        Ok("HEAD".to_string())
+                    } else {
+                        Ok(branch.to_string())
+                    }
+                }
+                Err(e) => {
+                    // Handle empty repository (no commits yet)
+                    if e.to_string().contains("ambiguous argument 'HEAD'") || e.to_string().contains("unknown revision") {
+                        return Ok("No Branch".to_string());
+                    }
+                    Err(e)
+                }
+            }
         }
     }
 }
