@@ -139,14 +139,14 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] bg-[#0A0A0B] border border-destructive/20 p-0 overflow-hidden shadow-2xl rounded-none">
+            <DialogContent className="sm:max-w-[600px] max-w-[600px] bg-[#0A0A0B] border border-destructive/20 p-0 overflow-hidden shadow-2xl rounded-none">
                 <div className="px-8 py-6">
                     <DialogHeader className="mb-6">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-xl bg-destructive/20 text-destructive">
+                            <div className="p-2 rounded-xl bg-destructive/20 text-destructive shrink-0">
                                 <AlertTriangle className="w-5 h-5" />
                             </div>
-                            <DialogTitle className="text-xl font-black text-foreground">
+                            <DialogTitle className="text-xl font-black text-foreground min-w-0">
                                 Conflitos de Merge Detectados
                             </DialogTitle>
                         </div>
@@ -169,10 +169,10 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
                                     key={conflict.path}
                                     className="p-4 bg-background/40 border border-border/20 rounded-xl hover:border-destructive/40 transition-all"
                                 >
-                                    <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center justify-between mb-3 min-w-0">
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
                                             <FileText className="w-4 h-4 text-destructive shrink-0" />
-                                            <span className="text-sm font-mono text-foreground truncate">
+                                            <span className="text-sm font-mono text-foreground truncate min-w-0">
                                                 {conflict.path}
                                             </span>
                                         </div>

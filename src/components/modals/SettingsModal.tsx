@@ -45,14 +45,14 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[480px] bg-[#0A0A0B] border-none p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
+            <DialogContent className="sm:max-w-[480px] max-w-[480px] bg-[#0A0A0B] border-none p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
                 <div className="px-8 py-10">
                     <DialogHeader className="mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white/[0.03] flex items-center justify-center rounded-none">
+                            <div className="w-10 h-10 bg-white/[0.03] flex items-center justify-center rounded-none shrink-0">
                                 <Settings className="w-5 h-5 text-foreground/60" />
                             </div>
-                            <div className="space-y-0.5">
+                            <div className="space-y-0.5 min-w-0">
                                 <DialogTitle className="text-lg font-black uppercase tracking-[0.2em] text-foreground leading-none">
                                     Global Settings
                                 </DialogTitle>
@@ -101,7 +101,8 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
                                     placeholder="ghp_xxxxxxxxxxxx"
-                                    className="w-full bg-white/[0.02] px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.04] transition-all placeholder:text-muted-foreground/5"
+                                    className="w-full min-w-0 bg-white/[0.02] px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.04] transition-all placeholder:text-muted-foreground/5 overflow-hidden text-ellipsis"
+                                    style={{ maxWidth: '100%' }}
                                 />
                             </div>
                         </div>
@@ -144,16 +145,16 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                     </div>
                 </div>
 
-                <DialogFooter className="px-8 py-8 bg-white/[0.01] border-t border-white/[0.03] flex items-center justify-center gap-12">
+                <DialogFooter className="px-8 py-8 bg-white/[0.01] border-t border-white/[0.03] flex items-center justify-between gap-4">
                     <button
                         onClick={() => onOpenChange(false)}
-                        className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 hover:text-foreground transition-all"
+                        className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 hover:text-foreground transition-all shrink-0"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
-                        className="flex-1 max-w-[180px] h-12 bg-foreground text-background text-[10px] font-black uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-3 shadow-xl"
+                        className="flex-1 max-w-[180px] min-w-[120px] h-12 bg-foreground text-background text-[10px] font-black uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-3 shadow-xl shrink-0"
                     >
                         Save Config
                     </button>
