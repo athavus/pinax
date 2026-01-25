@@ -1,2 +1,23 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+
+src-tauri/**   linguist-language=Rust
+*.rs           linguist-language=Rust
+
+dist/**        linguist-generated
+pkg/**         linguist-generated
+_build/**      linguist-generated
+node_modules   linguist-vendored
+
+src/**         linguist-language=TypeScript
+*.tsx          linguist-language=TypeScript
+*.ts           linguist-language=TypeScript
+
+*.md           linguist-documentation
+
+pnpm-lock.yaml linguist-generated
+Cargo.lock     linguist-generated
+
+*.png          linguist-generated
+*.svg          linguist-generated
+*.css          linguist-generated
+*.html         linguist-generated
