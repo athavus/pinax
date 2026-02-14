@@ -1,19 +1,30 @@
-import { useState, useEffect, useCallback } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { useEffect } from "react";
 
 type Theme = "dark" | "light";
 
-const STORAGE_KEY = "pinax-theme";
-
-function getInitialTheme(): Theme {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored === "light" || stored === "dark") return stored;
-    } catch { }
-    return "dark";
+interface ThemeState {
+    theme: Theme;
+    toggleTheme: () => void;
+    setTheme: (theme: Theme) => void;
 }
 
+const useThemeStore = create<ThemeState>()(
+    persist(
+        (set) => ({
+            theme: "dark",
+            toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
+            setTheme: (theme) => set({ theme }),
+        }),
+        {
+            name: "pinax-theme",
+        }
+    )
+);
+
 export function useTheme() {
-    const [theme, setTheme] = useState<Theme>(getInitialTheme);
+    const { theme, toggleTheme } = useThemeStore();
 
     useEffect(() => {
         const root = document.documentElement;
@@ -22,12 +33,7 @@ export function useTheme() {
         } else {
             root.classList.remove("dark");
         }
-        localStorage.setItem(STORAGE_KEY, theme);
     }, [theme]);
-
-    const toggleTheme = useCallback(() => {
-        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-    }, []);
 
     const isDark = theme === "dark";
 
