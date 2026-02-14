@@ -206,6 +206,11 @@ async fn git_reset_to_commit(path: String, hash: String) -> Result<(), String> {
 async fn git_cherry_pick_commit(path: String, hash: String) -> Result<(), String> {
     git::cherry_pick_commit(Path::new(&path), &hash).await.map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+async fn git_delete_branch(path: String, branch: String, force: bool) -> Result<(), String> {
+    git::delete_branch(Path::new(&path), &branch, force).await.map_err(|e| e.to_string())
+}
 #[tauri::command]
 async fn git_init(path: String) -> Result<(), String> {
     git::init(Path::new(&path)).await.map_err(|e| e.to_string())
@@ -462,6 +467,7 @@ pub fn run() {
             git_revert_commit,
             git_reset_to_commit,
             git_cherry_pick_commit,
+            git_delete_branch,
             git_undo_commit,
             git_resolve_conflict,
             get_file_diff,

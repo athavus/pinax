@@ -27,7 +27,6 @@ import {
 import { md5 } from "@/lib/md5";
 import { WelcomeView } from "./WelcomeView";
 import { MergeConflictModal } from "@/components/modals/MergeConflictModal";
-import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -38,6 +37,12 @@ import {
     ContextMenuSubTrigger,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 export function MainArea() {
     const {
@@ -104,11 +109,28 @@ export function MainArea() {
 
     const selectedRepo = repositories.find((r) => r.path === selectedRepositoryPath);
 
-    const filteredBranches = branches.filter(b =>
+    // Deduplicate branches: if we have "main" and "origin/main", we only show "main"
+    // We prioritize local branches and show remotes only if they don't have a local counterpart
+    const deduplicatedBranches = React.useMemo(() => {
+        const locals = branches.filter(b => !b.is_remote);
+        const remotes = branches.filter(b => b.is_remote);
+
+        const filteredRemotes = remotes.filter(remote => {
+            // Check if there is a local branch with the same name
+            // The remote name might be "origin/branch-name", we need to check the suffix
+            // Usually remotes have the full name, but we can check if any local matches the "short" name
+            const shortName = remote.name.split("/").slice(1).join("/");
+            return !locals.some(local => local.name === shortName || local.name === remote.name);
+        });
+
+        return [...locals, ...filteredRemotes];
+    }, [branches]);
+
+    const filteredBranches = deduplicatedBranches.filter(b =>
         b.name.toLowerCase().includes(branchFilter.toLowerCase())
     );
 
-    const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
+    const defaultBranch = deduplicatedBranches.find(b => b.name === "main" || b.name === "master");
     const otherBranches = filteredBranches.filter(b => b.name !== (defaultBranch?.name || ""));
 
 
@@ -234,105 +256,110 @@ export function MainArea() {
                             <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform hidden md:block", branchSelectorOpen && "rotate-180")} />
                         </button>
 
-                        {branchSelectorOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setBranchSelectorOpen(false)}
-                                />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-2xl overflow-hidden flex flex-col">
-                                    {/* Tabs (Branches / Pull Requests) */}
-                                    <div className="flex border-b border-border/10 bg-muted/40 h-12">
-                                        <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
-                                        <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-foreground/80 transition-colors">Pull requests <span className="ml-1 opacity-50">0</span></button>
-                                    </div>
-
-                                    {/* Search and New Branch */}
-                                    <div className="p-4 border-b border-border/10 flex gap-3">
-                                        <div className="relative flex-1">
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40">
-                                                <RefreshCw className="w-4 h-4" />
-                                            </div>
-                                            <input
-                                                autoFocus
-                                                value={branchFilter}
-                                                onChange={(e) => setBranchFilter(e.target.value)}
-                                                placeholder="Filter branches"
-                                                className="w-full bg-background/50 border border-border/40 py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-primary/60 rounded-none placeholder:text-muted-foreground/30 shadow-inner"
-                                            />
+                        <Dialog open={branchSelectorOpen} onOpenChange={setBranchSelectorOpen}>
+                            <DialogContent className="max-w-xl p-0 overflow-hidden bg-card border-border shadow-2xl rounded-3xl top-28 left-[420px] md:left-[450px] lg:left-[600px] translate-x-0 translate-y-0">
+                                <DialogHeader className="p-6 border-b border-border/10 bg-muted/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                                            <GitBranch className="w-5 h-5" />
                                         </div>
-                                        <button
-                                            className="px-4 py-2.5 bg-secondary text-secondary-foreground text-xs font-bold hover:brightness-110 shadow-sm transition-all rounded-none"
-                                            onClick={() => {/* TODO: Open create branch dialog */ }}
-                                        >
-                                            New branch
-                                        </button>
+                                        <DialogTitle className="text-xl font-black text-foreground">
+                                            Switch Branch
+                                        </DialogTitle>
                                     </div>
+                                </DialogHeader>
 
-                                    <div className="flex-1 overflow-y-auto max-h-[500px]">
-                                        {/* Default Branch */}
-                                        {defaultBranch && (!branchFilter || defaultBranch.name.toLowerCase().includes(branchFilter.toLowerCase())) && (
-                                            <div className="py-3">
-                                                <div className="px-5 py-1.5">
-                                                    <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Default branch</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleBranchSwitch(defaultBranch.name)}
-                                                    className={cn(
-                                                        "w-full flex items-center gap-4 px-5 py-3 text-sm font-bold text-left transition-all",
-                                                        defaultBranch.is_current
-                                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 mx-2 w-[calc(100%-1rem)] rounded-none"
-                                                            : "hover:bg-primary/10 text-muted-foreground hover:text-foreground"
-                                                    )}
-                                                >
-                                                    <GitBranch className="w-4 h-4 opacity-50" />
-                                                    <span className="truncate flex-1">{defaultBranch.name}</span>
-                                                    {defaultBranch.is_current && <Check className="w-4 h-4" />}
-                                                </button>
-                                            </div>
-                                        )}
+                                {/* Tabs (Branches / Pull Requests) */}
+                                <div className="flex border-b border-border/10 bg-muted/40 h-12">
+                                    <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
+                                    <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-foreground/80 transition-colors">Pull requests <span className="ml-1 opacity-50">0</span></button>
+                                </div>
 
-                                        {/* Other Branches */}
+                                {/* Search and New Branch */}
+                                <div className="p-4 border-b border-border/10 flex gap-3">
+                                    <div className="relative flex-1">
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40">
+                                            <RefreshCw className="w-4 h-4" />
+                                        </div>
+                                        <input
+                                            autoFocus
+                                            value={branchFilter}
+                                            onChange={(e) => setBranchFilter(e.target.value)}
+                                            placeholder="Filter branches"
+                                            className="w-full bg-background/50 border border-border/40 py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-primary/60 rounded-none placeholder:text-muted-foreground/30 shadow-inner"
+                                        />
+                                    </div>
+                                    <button
+                                        className="px-4 py-2.5 bg-secondary text-secondary-foreground text-xs font-bold hover:brightness-110 shadow-sm transition-all rounded-none"
+                                        onClick={() => {/* TODO: Open create branch dialog */ }}
+                                    >
+                                        New branch
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto max-h-[400px]">
+                                    {/* Default Branch */}
+                                    {defaultBranch && (!branchFilter || defaultBranch.name.toLowerCase().includes(branchFilter.toLowerCase())) && (
                                         <div className="py-3">
                                             <div className="px-5 py-1.5">
-                                                <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Other branches</span>
+                                                <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Default branch</span>
                                             </div>
-                                            {otherBranches.length > 0 ? (
-                                                <div className="px-2 space-y-1">
-                                                    {otherBranches.map((branch) => (
-                                                        <button
-                                                            key={branch.name}
-                                                            onClick={() => handleBranchSwitch(branch.name)}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-4 px-4 py-3 text-sm font-medium text-left transition-all rounded-none",
-                                                                branch.is_current
-                                                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                                                    : "hover:bg-primary/5 text-muted-foreground/80 hover:text-foreground"
-                                                            )}
-                                                        >
-                                                            <GitBranch className="w-4 h-4 opacity-40 group-hover:opacity-100" />
-                                                            <span className="truncate flex-1">{branch.name}</span>
-                                                            {branch.is_current && <Check className="w-4 h-4" />}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="px-5 py-6 text-center text-muted-foreground/30 text-xs italic font-medium">
-                                                    No branches matching filter
-                                                </div>
-                                            )}
+                                            <button
+                                                onClick={() => handleBranchSwitch(defaultBranch.name)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-4 px-5 py-3 text-sm font-bold text-left transition-all",
+                                                    defaultBranch.is_current
+                                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 mx-2 w-[calc(100%-1rem)] rounded-none"
+                                                        : "hover:bg-primary/10 text-muted-foreground hover:text-foreground"
+                                                )}
+                                            >
+                                                <GitBranch className="w-4 h-4 opacity-50" />
+                                                <span className="truncate flex-1">{defaultBranch.name}</span>
+                                                {defaultBranch.is_current && <Check className="w-4 h-4" />}
+                                            </button>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="p-4 border-t border-border/10 bg-muted/40">
-                                        <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-xl text-primary/80">
-                                            <GitBranch className="w-4 h-4" />
-                                            Merge into <strong>{repositoryStatus?.branch || "main"}</strong>
-                                        </button>
+                                    {/* Other Branches */}
+                                    <div className="py-3">
+                                        <div className="px-5 py-1.5">
+                                            <span className="text-[10px] font-black uppercase text-secondary-foreground/70 tracking-[0.2em]">Other branches</span>
+                                        </div>
+                                        {otherBranches.length > 0 ? (
+                                            <div className="px-2 space-y-1">
+                                                {otherBranches.map((branch) => (
+                                                    <button
+                                                        key={branch.name}
+                                                        onClick={() => handleBranchSwitch(branch.name)}
+                                                        className={cn(
+                                                            "w-full flex items-center gap-4 px-4 py-3 text-sm font-medium text-left transition-all rounded-none",
+                                                            branch.is_current
+                                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                                                : "hover:bg-primary/5 text-muted-foreground/80 hover:text-foreground"
+                                                        )}
+                                                    >
+                                                        <GitBranch className="w-4 h-4 opacity-40 group-hover:opacity-100" />
+                                                        <span className="truncate flex-1">{branch.name}</span>
+                                                        {branch.is_current && <Check className="w-4 h-4" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="px-5 py-6 text-center text-muted-foreground/30 text-xs italic font-medium">
+                                                No branches matching filter
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            </>
-                        )}
+
+                                <div className="p-4 border-t border-border/10 bg-muted/40">
+                                    <button className="w-full flex items-center justify-center gap-3 py-3 border border-border/40 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:border-primary/40 transition-all rounded-xl text-primary/80">
+                                        <GitBranch className="w-4 h-4" />
+                                        Merge into <strong>{repositoryStatus?.branch || "main"}</strong>
+                                    </button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     <div className="w-px h-6 bg-border/20" />
@@ -717,9 +744,6 @@ export function MainArea() {
                 open={mergeConflictModalOpen}
                 onOpenChange={setMergeConflictModalOpen}
             />
-
-            {/* Shortcuts Modal */}
-            <ShortcutsModal />
         </main >
     );
 }

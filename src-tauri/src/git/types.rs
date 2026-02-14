@@ -58,6 +58,7 @@ pub struct Branch {
     pub is_current: bool,
     pub is_remote: bool,
     pub upstream: Option<String>,
+    pub track: Option<String>,
 }
 
 /// Information about a commit

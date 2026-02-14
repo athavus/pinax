@@ -9,7 +9,7 @@ use super::types::Branch;
 
 /// List all branches in a repository
 pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
-    let output = execute_string(repo_path, &["branch", "-a", "--format=%(refname)\t%(HEAD)\t%(upstream:short)"]).await?;
+    let output = execute_string(repo_path, &["branch", "-a", "--format=%(refname)\t%(HEAD)\t%(upstream:short)\t%(upstream:track)"]).await?;
 
     let mut branches = Vec::new();
 
@@ -22,6 +22,13 @@ pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
         let refname = parts[0].to_string();
         let is_current = parts.get(1).map(|s| *s == "*").unwrap_or(false);
         let upstream = parts.get(2).and_then(|s| {
+            if s.is_empty() {
+                None
+            } else {
+                Some(s.to_string())
+            }
+        });
+        let track = parts.get(3).and_then(|s| {
             if s.is_empty() {
                 None
             } else {
@@ -51,6 +58,7 @@ pub async fn list_branches(repo_path: &Path) -> GitResult<Vec<Branch>> {
             is_current,
             is_remote,
             upstream,
+            track,
         });
     }
 

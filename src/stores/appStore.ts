@@ -21,6 +21,7 @@ import {
     gitUnstageAll,
     gitCheckout,
     gitCreateBranch,
+    gitDeleteBranch,
     gitUndoCommit,
     gitResolveConflict,
     gitDiscardChanges,
@@ -228,6 +229,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                 const branches = allBranches.filter(b => b.name !== "HEAD");
                 set({ repositoryStatus: status, branches, isLoading: false });
                 await get().loadHistory();
+                // Auto-fetch and sync branches immediately on selection
+                get().fetch();
             } catch (error) {
                 set({
                     error: `Failed to get repository status: ${error}`,
@@ -273,6 +276,8 @@ export const useAppStore = create<AppState>((set, get) => ({
             // Refresh status after fetch
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isFetching: false, isLoading: false });
+            // Refresh branches after fetch to catch pruned branches
+            await get().loadBranches();
             await get().loadHistory();
         } catch (error) {
             set({ error: `Fetch failed: ${error}`, isFetching: false, isLoading: false });
@@ -296,6 +301,45 @@ export const useAppStore = create<AppState>((set, get) => ({
             await get().loadHistory();
         } catch (error) {
             const errorMessage = String(error);
+
+            // Check for specific stale upstream error
+            if (errorMessage.includes("no such ref was fetched") || errorMessage.includes("gone")) {
+                const { branches, selectedRepositoryPath } = get();
+                const currentBranchName = get().repositoryStatus.branch;
+                const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
+
+                if (defaultBranch && currentBranchName !== defaultBranch.name && selectedRepositoryPath) {
+                    try {
+                        // 1. Switch to default branch
+                        await gitCheckout(selectedRepositoryPath, defaultBranch.name);
+                        // 2. Delete the stale branch
+                        await gitDeleteBranch(selectedRepositoryPath, currentBranchName, true);
+
+                        set({
+                            error: `Branch Cleanup: The remote branch for '${currentBranchName}' was deleted. Pinax has automatically switched you to '${defaultBranch.name}' and removed the stale local branch.`,
+                            isPulling: false,
+                            isLoading: false
+                        });
+
+                        // Refresh state
+                        await get().loadBranches();
+                        const status = await getRepositoryStatus(selectedRepositoryPath);
+                        set({ repositoryStatus: status });
+                        return;
+                    } catch (cleanupError) {
+                        console.error("Auto-cleanup failed:", cleanupError);
+                    }
+                }
+
+                set({
+                    error: `Pull failed: The tracked remote branch no longer exists. You might want to switch to another branch or delete this local one.`,
+                    isPulling: false,
+                    isLoading: false
+                });
+                await get().loadBranches();
+                return;
+            }
+
             // Check if error is due to conflicts
             if (errorMessage.includes("conflict") || errorMessage.includes("CONFLICT") || errorMessage.includes("conflito")) {
                 const status = await getRepositoryStatus(selectedRepositoryPath);
@@ -935,6 +979,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status });
+            // Keep branches in sync during polling
+            await get().loadBranches();
         } catch (error) {
             // Silent error failure for polling to avoid pestering user
             console.error("Polling failed:", error);

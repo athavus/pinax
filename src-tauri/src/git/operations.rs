@@ -3,7 +3,7 @@ use super::executor::{execute, execute_string, GitResult, GitError};
 
 /// Fetch changes from remote
 pub async fn fetch(path: &Path) -> GitResult<()> {
-    let output = execute(path, &["fetch", "--all"]).await?;
+    let output = execute(path, &["fetch", "--all", "--prune"]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(GitError {
@@ -20,6 +20,16 @@ pub async fn pull(path: &Path) -> GitResult<()> {
     let output = execute(path, &["pull"]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        
+        // Provide better guidance for detached HEAD
+        if stderr.contains("You are not currently on a branch") || stderr.contains("not currently on a branch") {
+            return Err(GitError {
+                message: "Pull failed: You are in 'detached HEAD' state. Please switch to a local branch or create a branch from this commit to sync changes.".to_string(),
+                command: "pull".to_string(),
+                exit_code: output.status.code(),
+            });
+        }
+
         return Err(GitError {
             message: stderr.to_string(),
             command: "pull".to_string(),
@@ -155,7 +165,51 @@ pub async fn undo_commit(path: &Path) -> GitResult<()> {
 
 /// Checkout a branch
 pub async fn checkout(path: &Path, branch_name: &str) -> GitResult<()> {
-    execute(path, &["checkout", branch_name]).await?;
+    // Detect if it's a remote branch (e.g., origin/feature/a2h)
+    // We check if it contains a slash and isn't a local branch name
+    // A better way is to check the remotes list, but for now common naming works
+    let remotes_output = execute_string(path, &["remote"]).await.unwrap_or_default();
+    let remotes: Vec<&str> = remotes_output.lines().collect();
+    
+    let mut is_remote = false;
+    let mut remote_name = String::new();
+    let mut short_name = String::new();
+
+    for remote in remotes {
+        let prefix = format!("{}/", remote);
+        if branch_name.starts_with(&prefix) {
+            is_remote = true;
+            remote_name = remote.to_string();
+            short_name = branch_name[prefix.len()..].to_string();
+            break;
+        }
+    }
+
+    if is_remote {
+        // Check if local branch already exists
+        let locals_output = execute_string(path, &["branch"]).await.unwrap_or_default();
+        let local_exists = locals_output.lines().any(|l| {
+            let name = l.trim().trim_start_matches('*').trim();
+            name == short_name
+        });
+
+        if local_exists {
+            // Just switch to local
+            execute(path, &["checkout", &short_name]).await?;
+        } else {
+            // Create local tracking branch
+            // git checkout -b <short> --track <remote>/<short>
+            let output = execute(path, &["checkout", "-b", &short_name, "--track", branch_name]).await?;
+            if !output.status.success() {
+                // Fallback: regular checkout (detached HEAD)
+                execute(path, &["checkout", branch_name]).await?;
+            }
+        }
+    } else {
+        // Regular local checkout
+        execute(path, &["checkout", branch_name]).await?;
+    }
+    
     Ok(())
 }
 
@@ -245,6 +299,21 @@ pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
 /// Create a branch from a specific commit
 pub async fn create_branch_from_commit(path: &Path, branch_name: &str, hash: &str) -> GitResult<()> {
     execute(path, &["branch", branch_name, hash]).await?;
+    Ok(())
+}
+
+/// Delete a branch
+pub async fn delete_branch(path: &Path, branch_name: &str, force: bool) -> GitResult<()> {
+    let flag = if force { "-D" } else { "-d" };
+    let output = execute(path, &["branch", flag, branch_name]).await?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: format!("branch {} {}", flag, branch_name),
+            exit_code: output.status.code(),
+        });
+    }
     Ok(())
 }
 

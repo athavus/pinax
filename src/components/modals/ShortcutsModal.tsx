@@ -29,39 +29,39 @@ export function ShortcutsModal() {
 
     return (
         <Dialog open={shortcutsModalOpen} onOpenChange={setShortcutsModalOpen}>
-            <DialogContent className="max-w-2xl bg-white text-zinc-950 border-zinc-200 p-0 overflow-hidden shadow-2xl rounded-3xl">
-                <DialogHeader className="p-8 pb-4 border-b border-zinc-100">
+            <DialogContent className="max-w-2xl bg-[hsl(var(--card))] text-foreground border-border p-0 overflow-hidden shadow-2xl rounded-3xl">
+                <DialogHeader className="p-8 pb-4 border-b border-border/50">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-zinc-100 text-zinc-900">
+                        <div className="p-3 rounded-2xl bg-muted text-foreground">
                             <Keyboard className="w-6 h-6" />
                         </div>
                         <div>
-                            <DialogTitle className="text-2xl font-black tracking-tight text-zinc-900">Command Palette</DialogTitle>
-                            <p className="text-sm text-zinc-500 font-medium tracking-tight">Keyboard shortcuts and available commands</p>
+                            <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Command Palette</DialogTitle>
+                            <p className="text-sm text-muted-foreground font-medium tracking-tight">Keyboard shortcuts and available commands</p>
                         </div>
                     </div>
                 </DialogHeader>
 
-                <div className="max-h-[60vh] overflow-y-auto p-4 custom-scrollbar bg-white">
+                <div className="max-h-[60vh] overflow-y-auto p-4 custom-scrollbar bg-card">
                     {categories.map((category) => {
                         const categoryCommands = commands.filter((c) => c.category === category);
                         if (categoryCommands.length === 0) return null;
 
                         return (
                             <div key={category} className="mb-8 last:mb-0">
-                                <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-3">{category}</h3>
+                                <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">{category}</h3>
                                 <div className="space-y-1">
                                     {categoryCommands.map((cmd) => (
                                         <div
                                             key={cmd.id}
-                                            className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 transition-colors group cursor-default"
+                                            className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-muted/50 transition-colors group cursor-default"
                                         >
-                                            <span className="text-sm font-bold text-zinc-700 group-hover:text-zinc-950 transition-colors">{cmd.label}</span>
+                                            <span className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">{cmd.label}</span>
                                             <div className="flex gap-1.5">
                                                 {getBindingDisplay(cmd.id)?.split(" + ").map((key, i) => (
                                                     <kbd
                                                         key={i}
-                                                        className="px-2 py-1 min-w-[2.5rem] text-center bg-white border border-zinc-200 rounded-lg text-[10px] font-black shadow-sm text-zinc-500 group-hover:text-zinc-950 group-hover:border-zinc-300 transition-all font-mono"
+                                                        className="px-2 py-1 min-w-[2.5rem] text-center bg-card border border-border rounded-lg text-[10px] font-black shadow-sm text-muted-foreground group-hover:text-foreground group-hover:border-accent transition-all font-mono"
                                                     >
                                                         {key}
                                                     </kbd>
@@ -75,8 +75,8 @@ export function ShortcutsModal() {
                     })}
                 </div>
 
-                <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Pinax v1.1.6</p>
+                <div className="p-4 bg-muted/30 border-t border-border/50 flex justify-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Pinax v1.2.0</p>
                 </div>
             </DialogContent>
         </Dialog>

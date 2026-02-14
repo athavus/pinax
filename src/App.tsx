@@ -1,5 +1,6 @@
 import { MainLayout } from "@/components/layout";
 import { QuickSearch } from "@/components/QuickSearch";
+import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
 import { useKeyBindings, useTheme } from "@/hooks";
 import { useAppStore } from "@/stores/appStore";
 import React from "react";
@@ -12,6 +13,8 @@ export default function App() {
   const { loadAvailableEditors } = useAppStore();
 
   React.useEffect(() => {
+    // Focus window to ensure keybindings work immediately
+    window.focus();
     loadAvailableEditors();
   }, [loadAvailableEditors]);
 
@@ -19,6 +22,7 @@ export default function App() {
     <>
       <MainLayout />
       <QuickSearch />
+      <ShortcutsModal />
     </>
   );
 }

@@ -44,6 +44,7 @@ export interface Branch {
     is_current: boolean;
     is_remote: boolean;
     upstream?: string;
+    track?: string;
 }
 
 // ============== Workspace Types ==============

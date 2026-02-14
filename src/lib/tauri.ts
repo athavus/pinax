@@ -108,6 +108,10 @@ export async function gitCreateBranch(path: string, branch: string): Promise<voi
     return invoke("git_create_branch", { path, branch });
 }
 
+export async function gitDeleteBranch(path: string, branch: string, force: boolean): Promise<void> {
+    return invoke("git_delete_branch", { path, branch, force });
+}
+
 export async function gitUndoCommit(path: string): Promise<void> {
     return invoke("git_undo_commit", { path });
 }
