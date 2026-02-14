@@ -72,6 +72,7 @@ interface AppState {
     hiddenRepositories: string[];
     error: string | null;
     mergeConflictModalOpen: boolean;
+    shortcutsModalOpen: boolean;
 
     // Settings
     settings: {
@@ -116,6 +117,8 @@ interface AppState {
     loadAvailableEditors: () => Promise<void>;
     openSelectedFileInEditor: () => Promise<void>;
     openRepositoryInEditor: (repoPath?: string) => Promise<void>;
+    openTerminal: (repoPath?: string) => Promise<void>;
+    openFileManager: (repoPath?: string) => Promise<void>;
 
 
     // GitHub Integration
@@ -140,6 +143,7 @@ interface AppState {
     clearError: () => void;
     updateSettings: (settings: Partial<AppState["settings"]>) => void;
     setMergeConflictModalOpen: (open: boolean) => void;
+    setShortcutsModalOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -164,6 +168,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     error: null,
     successAlert: null,
     mergeConflictModalOpen: false,
+    shortcutsModalOpen: false,
 
     // Initial settings from localStorage
     settings: {
@@ -628,6 +633,32 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
+    openTerminal: async (repoPath?: string) => {
+        const { selectedRepositoryPath } = get();
+        const pathToOpen = repoPath || selectedRepositoryPath;
+        if (!pathToOpen) return;
+
+        try {
+            const { openTerminal: openTerminalTauri } = await import("@/lib/tauri");
+            await openTerminalTauri(pathToOpen);
+        } catch (error) {
+            set({ error: `Failed to open terminal: ${error}` });
+        }
+    },
+
+    openFileManager: async (repoPath?: string) => {
+        const { selectedRepositoryPath } = get();
+        const pathToOpen = repoPath || selectedRepositoryPath;
+        if (!pathToOpen) return;
+
+        try {
+            const { openFileManager: openFileManagerTauri } = await import("@/lib/tauri");
+            await openFileManagerTauri(pathToOpen);
+        } catch (error) {
+            set({ error: `Failed to open file manager: ${error}` });
+        }
+    },
+
     createGithubRepository: async (token, name, description, isPrivate) => {
         set({ isLoading: true });
         try {
@@ -939,4 +970,5 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     setMergeConflictModalOpen: (open) => set({ mergeConflictModalOpen: open }),
+    setShortcutsModalOpen: (open) => set({ shortcutsModalOpen: open }),
 }));

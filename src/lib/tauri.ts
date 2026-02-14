@@ -235,3 +235,11 @@ export async function continueRebaseOrMerge(path: string): Promise<void> {
 export async function abortRebaseOrMerge(path: string): Promise<void> {
     return invoke("abort_rebase_or_merge", { path });
 }
+
+export async function openTerminal(path: string): Promise<void> {
+    return invoke("open_terminal", { path });
+}
+
+export async function openFileManager(path: string): Promise<void> {
+    return invoke("open_file_manager", { path });
+}

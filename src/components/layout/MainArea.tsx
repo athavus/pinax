@@ -27,6 +27,7 @@ import {
 import { md5 } from "@/lib/md5";
 import { WelcomeView } from "./WelcomeView";
 import { MergeConflictModal } from "@/components/modals/MergeConflictModal";
+import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -716,6 +717,9 @@ export function MainArea() {
                 open={mergeConflictModalOpen}
                 onOpenChange={setMergeConflictModalOpen}
             />
+
+            {/* Shortcuts Modal */}
+            <ShortcutsModal />
         </main >
     );
 }

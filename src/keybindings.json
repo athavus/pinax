@@ -27,19 +27,24 @@
             "description": "Focus the sidebar"
         },
         {
-            "key": "mod+1",
-            "command": "workspace.select.1",
-            "description": "Select first workspace"
+            "key": "mod+e",
+            "command": "editor.open",
+            "description": "Open current repository in default editor"
         },
         {
-            "key": "mod+2",
-            "command": "workspace.select.2",
-            "description": "Select second workspace"
+            "key": "mod+t",
+            "command": "terminal.open",
+            "description": "Open current repository in default terminal"
         },
         {
-            "key": "mod+3",
-            "command": "workspace.select.3",
-            "description": "Select third workspace"
+            "key": "mod+d",
+            "command": "fileExplorer.open",
+            "description": "Open current repository in file explorer"
+        },
+        {
+            "key": "mod+h",
+            "command": "shortcuts.show",
+            "description": "Show all commands"
         }
     ]
 }

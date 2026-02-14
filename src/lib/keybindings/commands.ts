@@ -59,20 +59,43 @@ export function registerCoreCommands(): void {
         },
     });
 
-    // Workspace selection
-    for (let i = 1; i <= 3; i++) {
-        keybindingEngine.registerCommand({
-            id: `workspace.select.${i}`,
-            label: `Select Workspace ${i}`,
-            category: "Workspace",
-            handler: () => {
-                const workspaces = useAppStore.getState().workspaces;
-                if (workspaces[i - 1]) {
-                    useAppStore.getState().setSelectedWorkspace(workspaces[i - 1].id);
-                }
-            },
-        });
-    }
+    // External Tools
+    keybindingEngine.registerCommand({
+        id: "editor.open",
+        label: "Open in Editor",
+        category: "External Tools",
+        handler: () => {
+            useAppStore.getState().openRepositoryInEditor();
+        },
+    });
+
+    keybindingEngine.registerCommand({
+        id: "terminal.open",
+        label: "Open Terminal",
+        category: "External Tools",
+        handler: () => {
+            useAppStore.getState().openTerminal();
+        },
+    });
+
+    keybindingEngine.registerCommand({
+        id: "fileExplorer.open",
+        label: "Open File Explorer",
+        category: "External Tools",
+        handler: () => {
+            useAppStore.getState().openFileManager();
+        },
+    });
+
+    // Shortcuts Modal
+    keybindingEngine.registerCommand({
+        id: "shortcuts.show",
+        label: "Show Commands",
+        category: "Navigation",
+        handler: () => {
+            useAppStore.getState().setShortcutsModalOpen(true);
+        },
+    });
 }
 
 /**
