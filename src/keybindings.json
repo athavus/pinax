@@ -3,6 +3,11 @@
     "bindings": [
         {
             "key": "mod+p",
+            "command": "quickSearch.open",
+            "description": "Open quick repository search"
+        },
+        {
+            "key": "mod+u",
             "command": "repository.push",
             "description": "Push commits to remote"
         },

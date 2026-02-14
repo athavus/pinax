@@ -239,7 +239,7 @@ export function MainArea() {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setBranchSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-zinc-900 border border-border shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-2xl overflow-hidden flex flex-col">
+                                <div className="absolute top-full left-0 mt-3 w-[400px] bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-20 animate-in fade-in slide-in-from-top-4 duration-300 rounded-2xl overflow-hidden flex flex-col">
                                     {/* Tabs (Branches / Pull Requests) */}
                                     <div className="flex border-b border-border/10 bg-muted/40 h-12">
                                         <button className="flex-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary">Branches</button>
@@ -342,7 +342,7 @@ export function MainArea() {
                             onClick={fetch}
                             disabled={isFetching}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-accent active:bg-accent/80 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isFetching && "animate-pulse"
                             )}
                         >
@@ -353,7 +353,7 @@ export function MainArea() {
                             onClick={pull}
                             disabled={isPulling}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-accent active:bg-accent/80 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isPulling && "animate-pulse"
                             )}
                         >
@@ -369,7 +369,7 @@ export function MainArea() {
                             onClick={push}
                             disabled={isPushing}
                             className={cn(
-                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
+                                "px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest transition-all border border-border/20 hover:bg-accent active:bg-accent/80 disabled:opacity-50 flex items-center gap-2 group relative overflow-hidden rounded-xl",
                                 isPushing && "animate-pulse"
                             )}
                         >
@@ -397,7 +397,7 @@ export function MainArea() {
                                 "flex-1 px-4 h-14 text-[10px] uppercase font-black tracking-[0.2em] border-b-2 transition-all",
                                 activeTab === "changes"
                                     ? "border-primary text-primary bg-primary/5"
-                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/2"
+                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50"
                             )}
                         >
                             Changes
@@ -413,7 +413,7 @@ export function MainArea() {
                                 "flex-1 px-4 h-14 text-[10px] uppercase font-black tracking-[0.2em] border-b-2 transition-all",
                                 activeTab === "history"
                                     ? "border-primary text-primary bg-primary/5"
-                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/2"
+                                    : "border-transparent text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50"
                             )}
                         >
                             History
@@ -505,7 +505,7 @@ export function MainArea() {
                                                         </div>
                                                     </div>
                                                 </ContextMenuTrigger>
-                                                <ContextMenuContent className="w-64 bg-zinc-900 border-border rounded-none shadow-2xl">
+                                                <ContextMenuContent className="w-64 bg-card border-border rounded-none shadow-2xl">
                                                     <ContextMenuItem
                                                         className="flex items-center gap-3 py-2.5 text-xs font-bold cursor-pointer"
                                                         onClick={() => {
@@ -687,7 +687,7 @@ export function MainArea() {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-1 overflow-auto bg-[#0d1117] font-mono text-[12px] leading-[1.6]">
+                            <div className="flex-1 overflow-auto bg-white dark:bg-[#0d1117] font-mono text-[12px] leading-[1.6]">
                                 {selectedFileDiff ? (
                                     <GitHubDiffView diff={selectedFileDiff} />
                                 ) : (
@@ -768,20 +768,20 @@ function GitHubDiffView({ diff }: { diff: string }) {
                         key={idx}
                         className={cn(
                             "flex group min-h-[22px] font-mono text-[11px] leading-relaxed",
-                            line.type === 'add' ? "bg-emerald-500/10 text-emerald-400 border-l-4 border-emerald-500/50" :
-                                line.type === 'delete' ? "bg-rose-500/10 text-rose-400 border-l-4 border-rose-500/50" :
-                                    line.type === 'hunk' ? "bg-white/[0.04] border-y border-white/[0.08] text-muted-foreground/60 sticky top-0 z-10 backdrop-blur-md py-1.5" :
-                                        line.type === 'meta' ? "text-muted-foreground/40 bg-white/[0.02] opacity-70 px-6 py-2 border-y border-white/[0.05] my-2" :
-                                            "hover:bg-white/[0.02] border-l-4 border-transparent"
+                            line.type === 'add' ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-l-4 border-emerald-500/50" :
+                                line.type === 'delete' ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-l-4 border-rose-500/50" :
+                                    line.type === 'hunk' ? "bg-muted/40 border-y border-border/20 text-muted-foreground/60 sticky top-0 z-10 backdrop-blur-md py-1.5" :
+                                        line.type === 'meta' ? "text-muted-foreground/40 bg-muted/20 opacity-70 px-6 py-2 border-y border-border/10 my-2" :
+                                            "hover:bg-muted/20 border-l-4 border-transparent"
                         )}
                     >
                         {/* Line Numbers Gutter */}
                         {line.type !== 'meta' && (
-                            <div className="w-24 shrink-0 flex select-none text-muted-foreground/30 border-r border-white/[0.05] mr-6 bg-white/[0.01] group-hover:bg-white/[0.02] font-mono text-[9px]">
+                            <div className="w-24 shrink-0 flex select-none text-muted-foreground/30 border-r border-border/10 mr-6 bg-muted/10 group-hover:bg-muted/20 font-mono text-[9px]">
                                 <div className="w-12 text-right pr-3 py-0.5 opacity-40">
                                     {line.oldLine || ''}
                                 </div>
-                                <div className="w-12 text-right pr-3 py-0.5 opacity-40 border-l border-white/[0.02]">
+                                <div className="w-12 text-right pr-3 py-0.5 opacity-40 border-l border-border/10">
                                     {line.newLine || ''}
                                 </div>
                             </div>
@@ -790,8 +790,8 @@ function GitHubDiffView({ diff }: { diff: string }) {
                         {/* Content */}
                         <div className={cn(
                             "flex-1 py-0.5 whitespace-pre pr-8 font-mono text-[11px] leading-relaxed tracking-tight overflow-hidden",
-                            line.type === 'add' ? "text-emerald-400 opacity-90" :
-                                line.type === 'delete' ? "text-rose-400 opacity-90" :
+                            line.type === 'add' ? "text-emerald-700 dark:text-emerald-400 opacity-90" :
+                                line.type === 'delete' ? "text-rose-700 dark:text-rose-400 opacity-90" :
                                     line.type === 'hunk' ? "text-primary/60 font-black italic tracking-widest bg-primary/2 py-2 my-1" :
                                         line.type === 'meta' ? "italic text-muted-foreground/30" :
                                             "text-muted-foreground/70"
@@ -820,7 +820,7 @@ function GitHubDiffView({ diff }: { diff: string }) {
             })}
 
             {parsedLines.length > 400 && (
-                <div className="px-6 py-12 flex flex-col items-center gap-4 bg-white/[0.02] border-t border-white/[0.05] mt-8">
+                <div className="px-6 py-12 flex flex-col items-center gap-4 bg-muted/20 border-t border-border/10 mt-8">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <Zap className="w-5 h-5 text-primary opacity-40 animate-pulse" />
                     </div>
@@ -845,11 +845,11 @@ function highlightCode(code: string) {
     return (
         <>
             {parts.map((part, i) => {
-                if (keywords.test(part)) return <span key={i} className="text-zinc-400 font-bold">{part}</span>;
-                if (types.test(part)) return <span key={i} className="text-zinc-500">{part}</span>;
-                if (strings.test(part)) return <span key={i} className="text-zinc-300 italic">{part}</span>;
-                if (comments.test(part)) return <span key={i} className="text-zinc-600 italic">{part}</span>;
-                return <span key={i} className="text-zinc-400/80">{part}</span>;
+                if (keywords.test(part)) return <span key={i} className="text-zinc-700 dark:text-zinc-400 font-bold">{part}</span>;
+                if (types.test(part)) return <span key={i} className="text-zinc-600 dark:text-zinc-500">{part}</span>;
+                if (strings.test(part)) return <span key={i} className="text-zinc-800 dark:text-zinc-300 italic">{part}</span>;
+                if (comments.test(part)) return <span key={i} className="text-zinc-500 dark:text-zinc-600 italic">{part}</span>;
+                return <span key={i} className="text-zinc-600/80 dark:text-zinc-400/80">{part}</span>;
             })}
         </>
     );
@@ -920,7 +920,7 @@ function FileList({
                                             "w-10 h-[46px] flex items-center justify-center transition-all border-r border-transparent shrink-0",
                                             stagedFiles.some(s => s.path === file.path)
                                                 ? "bg-primary/10 text-primary border-primary/20"
-                                                : "bg-white/[0.02] text-muted-foreground/20 hover:text-muted-foreground/40 hover:bg-white/[0.04]"
+                                                : "bg-muted/20 text-muted-foreground/20 hover:text-muted-foreground/40 hover:bg-muted/40"
                                         )}
                                     >
                                         <div className={cn(
@@ -964,7 +964,7 @@ function FileList({
                                     </button>
                                 </div>
                             </ContextMenuTrigger>
-                            <ContextMenuContent className="w-64 bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                            <ContextMenuContent className="w-64 bg-card border-border rounded-none shadow-2xl">
                                 <ContextMenuItem
                                     onClick={() => discardChanges(file.path)}
                                     className="flex items-center gap-3 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/10 cursor-pointer"
@@ -979,7 +979,7 @@ function FileList({
                                         Add to .gitignore
                                     </ContextMenuSubTrigger>
                                     <ContextMenuPortal>
-                                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-zinc-900 border-zinc-800 rounded-none shadow-2xl">
+                                        <ContextMenuSubContent className="min-w-[320px] max-w-[480px] bg-card border-border rounded-none shadow-2xl">
                                             {ignoreOptions.map((option: string) => (
                                                 <ContextMenuItem
                                                     key={option}

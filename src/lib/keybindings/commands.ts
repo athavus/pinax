@@ -38,6 +38,16 @@ export function registerCoreCommands(): void {
         },
     });
 
+    // Quick Search
+    keybindingEngine.registerCommand({
+        id: "quickSearch.open",
+        label: "Quick Open",
+        category: "Navigation",
+        handler: () => {
+            window.dispatchEvent(new CustomEvent("quick-search-open"));
+        },
+    });
+
     // Navigation
     keybindingEngine.registerCommand({
         id: "sidebar.focus",

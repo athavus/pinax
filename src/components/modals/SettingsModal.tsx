@@ -45,11 +45,11 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[480px] max-w-[480px] bg-[#0A0A0B] border-none p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
+            <DialogContent className="sm:max-w-[480px] max-w-[480px] bg-card border-border/40 p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
                 <div className="px-8 py-10">
                     <DialogHeader className="mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white/[0.03] flex items-center justify-center rounded-none shrink-0">
+                            <div className="w-10 h-10 bg-muted/40 flex items-center justify-center rounded-none shrink-0">
                                 <Settings className="w-5 h-5 text-foreground/60" />
                             </div>
                             <div className="space-y-0.5 min-w-0">
@@ -67,7 +67,7 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                         {/* GitHub Integration Section */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 bg-white/[0.02] flex items-center justify-center">
+                                <div className="w-6 h-6 bg-muted/30 flex items-center justify-center">
                                     <Github className="w-3.5 h-3.5 text-muted-foreground/30" />
                                 </div>
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">GitHub Authentication</h3>
@@ -101,7 +101,7 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
                                     placeholder="ghp_xxxxxxxxxxxx"
-                                    className="w-full min-w-0 bg-white/[0.02] px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.04] transition-all placeholder:text-muted-foreground/5 overflow-hidden text-ellipsis"
+                                    className="w-full min-w-0 bg-muted/30 px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-muted/50 transition-all placeholder:text-muted-foreground/5 overflow-hidden text-ellipsis"
                                     style={{ maxWidth: '100%' }}
                                 />
                             </div>
@@ -110,7 +110,7 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                         {/* Editor Section */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 bg-white/[0.02] flex items-center justify-center">
+                                <div className="w-6 h-6 bg-muted/30 flex items-center justify-center">
                                     <Code2 className="w-3.5 h-3.5 text-muted-foreground/30" />
                                 </div>
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">Code Editor Preference</h3>
@@ -120,15 +120,15 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                                 <label className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/20 pl-1">
                                     Preferred IDE / Editor
                                 </label>
-                                <div className="relative bg-white/[0.02] transition-all">
+                                <div className="relative bg-muted/30 transition-all">
                                     <select
                                         value={editor}
                                         onChange={(e) => setEditor(e.target.value)}
-                                        className="w-full bg-transparent px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] focus:outline-none appearance-none text-muted-foreground/60 cursor-pointer pr-10 hover:bg-white/5 transition-all outline-none ring-0"
+                                        className="w-full bg-transparent px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] focus:outline-none appearance-none text-muted-foreground/60 cursor-pointer pr-10 hover:bg-muted/40 transition-all outline-none ring-0"
                                     >
-                                        <option value="auto" className="bg-[#0A0A0B]">System Default (Auto)</option>
+                                        <option value="auto" className="bg-card">System Default (Auto)</option>
                                         {availableEditors.map((e) => (
-                                            <option key={String(e.command)} value={String(e.command)} className="bg-[#0A0A0B]">
+                                            <option key={String(e.command)} value={String(e.command)} className="bg-card">
                                                 {String(e.name)}
                                             </option>
                                         ))}
@@ -145,7 +145,7 @@ export function SettingsModal({ open: isOpen, onOpenChange }: SettingsModalProps
                     </div>
                 </div>
 
-                <DialogFooter className="px-8 py-8 bg-white/[0.01] border-t border-white/[0.03] flex items-center justify-between gap-4">
+                <DialogFooter className="px-8 py-8 bg-muted/10 border-t border-border/20 flex items-center justify-between gap-4">
                     <button
                         onClick={() => onOpenChange(false)}
                         className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 hover:text-foreground transition-all shrink-0"

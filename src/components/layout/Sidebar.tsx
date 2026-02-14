@@ -8,14 +8,16 @@ import { useAppStore } from "@/stores/appStore";
 import { Repository } from "@/types";
 import { WorkspaceSelect } from "@/components/workspace";
 import { useWorkspaceRepositories } from "@/hooks/useWorkspaceRepositories";
+import { useTheme } from "@/hooks";
 import { homeDir } from "@tauri-apps/api/path";
 import { CreateRepoModal } from "@/components/modals/CreateRepoModal";
 import { CloneRepoModal } from "@/components/modals/CloneRepoModal";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Globe, HardDrive, Plus, FolderGit2, Check, Settings } from "lucide-react";
-import logo from "@/assets/whitelogo.png";
+import { Globe, HardDrive, Plus, FolderGit2, Check, Settings, Sun, Moon } from "lucide-react";
+import whiteLogo from "@/assets/whitelogo.png";
+import darkLogo from "@/assets/logo.png";
 import { useDraggable, DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 
 export function Sidebar() {
@@ -23,6 +25,7 @@ export function Sidebar() {
     const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { isDark, toggleTheme } = useTheme();
 
     const {
         selectedRepositoryPath,
@@ -78,13 +81,24 @@ export function Sidebar() {
                 <header className="flex flex-col gap-4 px-6 pt-6 pb-4">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden transition-all hover:bg-primary/10">
-                            <img src={logo} alt="pinax logo" className="w-12 h-12 object-contain" />
+                            <img src={isDark ? whiteLogo : darkLogo} alt="pinax logo" className="w-12 h-12 object-contain" />
                         </div>
                         <div className="flex flex-col justify-center">
                             <h1 className="font-bold text-2xl tracking-tighter text-foreground leading-none">pinax</h1>
                             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1 opacity-80 leading-none">git-workbench</span>
                         </div>
-                        <div className="ml-auto">
+                        <div className="ml-auto flex items-center gap-1">
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2 text-muted-foreground/40 hover:text-primary transition-all group hover:bg-primary/5 rounded-xl"
+                                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                            >
+                                {isDark ? (
+                                    <Sun className="w-4 h-4 group-hover:rotate-45 transition-transform duration-500" />
+                                ) : (
+                                    <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />
+                                )}
+                            </button>
                             <button
                                 onClick={() => setIsSettingsOpen(true)}
                                 className="p-2 text-muted-foreground/20 hover:text-primary transition-all group hover:bg-primary/5 rounded-xl"
@@ -125,13 +139,13 @@ export function Sidebar() {
                                             className="fixed inset-0 z-40"
                                             onClick={() => setIsMenuOpen(false)}
                                         />
-                                        <div className="absolute right-0 mt-3 w-64 bg-card border-none rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-3xl overflow-hidden ring-0 outline-none">
+                                        <div className="absolute right-0 mt-3 w-64 bg-card border border-border/40 rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-3xl overflow-hidden ring-0 outline-none">
                                             <button
                                                 onClick={() => {
                                                     setIsCreateModalOpen(true);
                                                     setIsMenuOpen(false);
                                                 }}
-                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-accent transition-all text-left group border-none ring-0 outline-none"
                                             >
                                                 <Plus className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
                                                 <div className="flex flex-col gap-0.5">
@@ -144,7 +158,7 @@ export function Sidebar() {
                                                     setIsCloneModalOpen(true);
                                                     setIsMenuOpen(false);
                                                 }}
-                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-accent transition-all text-left group border-none ring-0 outline-none"
                                             >
                                                 <Globe className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
                                                 <div className="flex flex-col gap-0.5">
@@ -164,7 +178,7 @@ export function Sidebar() {
                                                         await addLocalRepository(selected as string);
                                                     }
                                                 }}
-                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.04] transition-all text-left group border-none ring-0 outline-none"
+                                                className="w-full flex items-center gap-4 py-5 px-6 text-muted-foreground/30 hover:text-foreground hover:bg-accent transition-all text-left group border-none ring-0 outline-none"
                                             >
                                                 <HardDrive className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
                                                 <div className="flex flex-col gap-0.5">
@@ -272,7 +286,7 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                     </button>
                 </li>
             </ContextMenuTrigger>
-            <ContextMenuContent className="w-56 bg-zinc-900 border-border rounded-none shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100">
+            <ContextMenuContent className="w-56 bg-card border-border rounded-none shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100">
                 <ContextMenuItem
                     onClick={async () => {
                         try {
@@ -313,13 +327,13 @@ function RepositoryItem({ repository, isSelected, isFocused, onClick }: Reposito
                 >
                     Open in File Manager
                 </ContextMenuItem>
-                <div className="h-px bg-white/5 my-1.5" />
+                <div className="h-px bg-border my-1.5" />
                 <ContextMenuSub>
                     <ContextMenuSubTrigger className="flex items-center gap-3 py-2.5 text-[11px] font-black uppercase tracking-widest cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all px-4">
                         Move to Workspace
                     </ContextMenuSubTrigger>
                     <ContextMenuPortal>
-                        <ContextMenuSubContent className="min-w-[240px] bg-zinc-900 border-border rounded-none shadow-2xl p-1.5">
+                        <ContextMenuSubContent className="min-w-[240px] bg-card border-border rounded-none shadow-2xl p-1.5">
                             {workspaces.length === 0 ? (
                                 <ContextMenuItem disabled className="py-2.5 text-[11px] font-black uppercase tracking-widest px-4 opacity-20">No workspaces</ContextMenuItem>
                             ) : (

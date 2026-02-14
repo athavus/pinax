@@ -2,15 +2,19 @@
  * WelcomeView - Displayed when no repository is selected
  */
 
-import logo from "@/assets/whitelogo.png";
+import { useTheme } from "@/hooks";
+import whiteLogo from "@/assets/whitelogo.png";
+import darkLogo from "@/assets/logo.png";
 
 export function WelcomeView() {
+  const { isDark } = useTheme();
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-background/50 animate-in fade-in duration-700">
       <div className="relative mb-12">
         <div className="absolute -inset-16 bg-primary/10 rounded-full blur-[100px] animate-pulse" />
         <img
-          src={logo}
+          src={isDark ? whiteLogo : darkLogo}
           alt="pinax logo"
           className="w-64 h-64 relative z-10 drop-shadow-[0_0_50px_rgba(var(--primary),0.3)] object-contain transition-all duration-700"
         />

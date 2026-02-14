@@ -106,11 +106,11 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[480px] max-w-[480px] bg-[#0A0A0B] border-none p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
+            <DialogContent className="sm:max-w-[480px] max-w-[480px] bg-card border-border/40 p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
                 <div className="px-8 py-10">
                     <DialogHeader className="mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white/[0.03] flex items-center justify-center rounded-none shrink-0">
+                            <div className="w-10 h-10 bg-muted/40 flex items-center justify-center rounded-none shrink-0">
                                 <Github className="w-5 h-5 text-foreground/60" />
                             </div>
                             <div className="space-y-0.5 min-w-0">
@@ -134,7 +134,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="my-repo-name"
-                                className="w-full min-w-0 bg-white/[0.03] px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.05] transition-all overflow-hidden text-ellipsis"
+                                className="w-full min-w-0 bg-muted/30 px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-muted/50 transition-all overflow-hidden text-ellipsis"
                                 style={{ maxWidth: '100%' }}
                             />
                         </div>
@@ -144,7 +144,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 pl-1">
                                 Local Destination
                             </label>
-                            <div className="flex bg-white/[0.03] focus-within:bg-white/[0.05] transition-all min-w-0">
+                            <div className="flex bg-muted/30 focus-within:bg-muted/50 transition-all min-w-0">
                                 <input
                                     value={localPath}
                                     readOnly
@@ -153,7 +153,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                 />
                                 <button
                                     onClick={handleBrowse}
-                                    className="px-5 bg-white/[0.04] text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.08] transition-all flex items-center justify-center shrink-0"
+                                    className="px-5 bg-muted/40 text-muted-foreground/30 hover:text-foreground hover:bg-muted/60 transition-all flex items-center justify-center shrink-0"
                                 >
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
@@ -170,10 +170,10 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                     onClick={() => setAddReadme(!addReadme)}
                                     className={cn(
                                         "flex items-center gap-3 px-5 py-3.5 transition-all text-left",
-                                        addReadme ? "bg-primary/10 text-primary" : "bg-white/[0.02] text-muted-foreground/15 hover:bg-white/[0.04]"
+                                        addReadme ? "bg-primary/10 text-primary" : "bg-muted/20 text-muted-foreground/15 hover:bg-muted/40"
                                     )}
                                 >
-                                    <div className={cn("w-3 h-3 flex items-center justify-center rounded-none", addReadme ? "bg-primary text-primary-foreground" : "bg-white/5")}>
+                                    <div className={cn("w-3 h-3 flex items-center justify-center rounded-none", addReadme ? "bg-primary text-primary-foreground" : "bg-muted/40")}>
                                         {addReadme && <Check className="w-2.5 h-2.5" />}
                                     </div>
                                     <span className="text-[10px] font-black uppercase tracking-wider">README</span>
@@ -182,26 +182,26 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                     onClick={() => setAddLicense(!addLicense)}
                                     className={cn(
                                         "flex items-center gap-3 px-5 py-3.5 transition-all text-left",
-                                        addLicense ? "bg-primary/10 text-primary" : "bg-white/[0.02] text-muted-foreground/15 hover:bg-white/[0.04]"
+                                        addLicense ? "bg-primary/10 text-primary" : "bg-muted/20 text-muted-foreground/15 hover:bg-muted/40"
                                     )}
                                 >
-                                    <div className={cn("w-3 h-3 flex items-center justify-center rounded-none", addLicense ? "bg-primary text-primary-foreground" : "bg-white/5")}>
+                                    <div className={cn("w-3 h-3 flex items-center justify-center rounded-none", addLicense ? "bg-primary text-primary-foreground" : "bg-muted/40")}>
                                         {addLicense && <Check className="w-2.5 h-2.5" />}
                                     </div>
                                     <span className="text-[10px] font-black uppercase tracking-wider">LICENSE</span>
                                 </button>
                             </div>
 
-                            <div className="relative bg-white/[0.03] transition-all">
+                            <div className="relative bg-muted/30 transition-all">
                                 <select
                                     value={gitignoreType}
                                     onChange={(e) => setGitignoreType(e.target.value)}
                                     className="w-full bg-transparent px-5 py-3.5 text-[10px] font-black uppercase tracking-widest focus:outline-none appearance-none text-muted-foreground/40 cursor-pointer pr-10"
                                 >
-                                    <option value="none" className="bg-[#111]">No .gitignore</option>
-                                    <option value="node" className="bg-[#111]">Node / JavaScript</option>
-                                    <option value="python" className="bg-[#111]">Python</option>
-                                    <option value="rust" className="bg-[#111]">Rust</option>
+                                    <option value="none" className="bg-card">No .gitignore</option>
+                                    <option value="node" className="bg-card">Node / JavaScript</option>
+                                    <option value="python" className="bg-card">Python</option>
+                                    <option value="rust" className="bg-card">Rust</option>
                                 </select>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/10">
                                     <ChevronDown className="w-3.5 h-3.5" />
@@ -215,7 +215,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                             >
                                 <div className={cn(
                                     "w-3.5 h-3.5 transition-all flex items-center justify-center rounded-none",
-                                    isPrivate ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-white/5 group-hover:bg-white/10"
+                                    isPrivate ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted/40 group-hover:bg-muted/60"
                                 )}>
                                     {isPrivate && <Check className="w-2.5 h-2.5" />}
                                 </div>
@@ -245,7 +245,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                                 value={token}
                                 onChange={(e) => setToken(e.target.value)}
                                 placeholder="ghp_xxxxxxxxxxxx"
-                                className="w-full min-w-0 bg-white/[0.03] px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.05] transition-all placeholder:text-muted-foreground/5 overflow-hidden text-ellipsis"
+                                className="w-full min-w-0 bg-muted/30 px-5 py-4 text-sm font-mono !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-muted/50 transition-all placeholder:text-muted-foreground/5 overflow-hidden text-ellipsis"
                                 style={{ maxWidth: '100%' }}
                             />
                             <button
@@ -254,7 +254,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                             >
                                 <div className={cn(
                                     "w-3 h-3 transition-all flex items-center justify-center rounded-none",
-                                    saveToken ? "bg-muted-foreground/20 text-foreground" : "bg-white/5"
+                                    saveToken ? "bg-muted-foreground/20 text-foreground" : "bg-muted/40"
                                 )}>
                                     {saveToken && <Check className="w-2.5 h-2.5" />}
                                 </div>
@@ -273,7 +273,7 @@ export function CreateRepoModal({ open: isOpen, onOpenChange }: CreateRepoModalP
                     </div>
                 </div>
 
-                <DialogFooter className="px-8 py-8 bg-white/[0.01] border-t border-white/[0.03] flex items-center justify-between gap-4">
+                <DialogFooter className="px-8 py-8 bg-muted/10 border-t border-border/20 flex items-center justify-between gap-4">
                     <button
                         onClick={() => onOpenChange(false)}
                         className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 hover:text-foreground transition-all shrink-0"

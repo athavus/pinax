@@ -102,11 +102,11 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[480px] bg-[#0A0A0B] border-none p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
+            <DialogContent className="sm:max-w-[480px] bg-card border-border/40 p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
                 <div className="px-8 py-10">
                     <DialogHeader className="mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white/[0.03] flex items-center justify-center rounded-none">
+                            <div className="w-10 h-10 bg-muted/40 flex items-center justify-center rounded-none">
                                 <Globe className="w-5 h-5 text-foreground/60" />
                             </div>
                             <div className="space-y-0.5">
@@ -130,7 +130,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 placeholder="https://github.com/user/repo"
-                                className="w-full bg-white/[0.03] px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.05] transition-all"
+                                className="w-full bg-muted/30 px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-muted/50 transition-all"
                             />
                         </div>
 
@@ -139,7 +139,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 pl-1">
                                 Parent Directory
                             </label>
-                            <div className="flex bg-white/[0.03] focus-within:bg-white/[0.05] transition-all">
+                            <div className="flex bg-muted/30 focus-within:bg-muted/50 transition-all">
                                 <input
                                     value={parentPath}
                                     readOnly
@@ -148,7 +148,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                                 />
                                 <button
                                     onClick={handleBrowse}
-                                    className="px-5 bg-white/[0.04] text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.08] transition-all flex items-center justify-center"
+                                    className="px-5 bg-muted/40 text-muted-foreground/30 hover:text-foreground hover:bg-muted/60 transition-all flex items-center justify-center"
                                 >
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
@@ -164,7 +164,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                                 value={repoName}
                                 onChange={(e) => setRepoName(e.target.value)}
                                 placeholder="my-repo"
-                                className="w-full bg-white/[0.03] px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-white/[0.05] transition-all"
+                                className="w-full bg-muted/30 px-5 py-4 text-sm font-medium placeholder:text-muted-foreground/5 !border-none !ring-0 !outline-none focus:ring-0 focus-visible:ring-0 focus:outline-none focus:bg-muted/50 transition-all"
                             />
                         </div>
 
@@ -174,7 +174,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 pl-1">
                                     Clone To
                                 </label>
-                                <div className={`bg-white/[0.02] px-5 py-3.5 text-[11px] font-mono truncate ${directoryExists ? 'text-red-400/80' : 'text-primary/60'}`}>
+                                <div className={`bg-muted/30 px-5 py-3.5 text-[11px] font-mono truncate ${directoryExists ? 'text-red-400/80' : 'text-primary/60'}`}>
                                     {finalPath}
                                 </div>
                                 {directoryExists && (
@@ -190,7 +190,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
                     </div>
                 </div>
 
-                <DialogFooter className="px-8 py-8 bg-white/[0.01] border-t border-white/[0.03] flex items-center justify-center gap-12">
+                <DialogFooter className="px-8 py-8 bg-muted/10 border-t border-border/20 flex items-center justify-center gap-12">
                     <button
                         onClick={() => handleClose(false)}
                         className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 hover:text-foreground transition-all"

@@ -145,7 +145,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
     // Initial state
     workspaces: [],
-    selectedWorkspaceId: "uncategorized",
+    selectedWorkspaceId: localStorage.getItem("last_workspace_id") || "uncategorized",
     repositories: [],
     selectedRepositoryPath: null,
     repositoryStatus: null,
@@ -173,7 +173,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     availableEditors: [],
 
     // Actions
-    setSelectedWorkspace: (id) => set({ selectedWorkspaceId: id }),
+    setSelectedWorkspace: (id) => {
+        localStorage.setItem("last_workspace_id", id || "uncategorized");
+        set({ selectedWorkspaceId: id });
+    },
 
     createWorkspace: async (name) => {
         set({ isLoading: true });
@@ -279,12 +282,12 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPull(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isPulling: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
-            
+
             // Check for conflicts and open modal if needed
             if (status.conflicts.length > 0) {
                 set({ mergeConflictModalOpen: true });
             }
-            
+
             await get().loadHistory();
         } catch (error) {
             const errorMessage = String(error);
@@ -306,12 +309,12 @@ export const useAppStore = create<AppState>((set, get) => ({
             await gitPush(selectedRepositoryPath);
             const status = await getRepositoryStatus(selectedRepositoryPath);
             set({ repositoryStatus: status, isPushing: false, isLoading: false, selectedFile: null, selectedFileDiff: null });
-            
+
             // Check for conflicts and open modal if needed
             if (status.conflicts.length > 0) {
                 set({ mergeConflictModalOpen: true });
             }
-            
+
             await get().loadHistory();
         } catch (error) {
             const errorMessage = String(error);
