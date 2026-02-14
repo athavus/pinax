@@ -102,7 +102,7 @@ export function CloneRepoModal({ open: isOpen, onOpenChange }: CloneRepoModalPro
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[480px] bg-card border-border/40 p-0 overflow-hidden shadow-2xl rounded-none ring-0 outline-none">
+            <DialogContent hideClose className="sm:max-w-[480px] p-0 overflow-hidden outline-none ring-0">
                 <div className="px-8 py-10">
                     <DialogHeader className="mb-8">
                         <div className="flex items-center gap-4">

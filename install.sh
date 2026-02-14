@@ -135,7 +135,7 @@ echo ""
 
 # ---------- Build ----------
 echo "🔨 Compilando o projeto..."
-pnpm tauri build --bundles deb
+pnpm tauri build --bundles deb,appimage
 echo "✅ Compilação concluída!"
 echo ""
 

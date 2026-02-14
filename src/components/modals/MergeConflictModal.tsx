@@ -13,7 +13,7 @@ import {
     DialogFooter
 } from "@/components/ui/dialog";
 import { useAppStore } from "@/stores/appStore";
-import { AlertTriangle, Check, X, FileText, Zap, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, X, FileText, RefreshCw, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isRebaseOrMergeInProgress, continueRebaseOrMerge, abortRebaseOrMerge } from "@/lib/tauri";
 
@@ -30,6 +30,7 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
         setSelectedFile,
         openSelectedFileInEditor,
         refreshRepositoryStatus,
+        settings,
     } = useAppStore();
 
     const [isContinuing, setIsContinuing] = useState(false);
@@ -60,7 +61,7 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
         // Check if all conflicts are resolved
         await refreshRepositoryStatus();
         const currentStatus = await useAppStore.getState().repositoryStatus;
-        
+
         if (currentStatus && currentStatus.conflicts.length > 0) {
             // Still have conflicts, show error
             useAppStore.getState().error = "Ainda existem conflitos não resolvidos. Por favor, resolva todos os conflitos antes de continuar.";
@@ -72,7 +73,7 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
             await continueRebaseOrMerge(selectedRepositoryPath);
             await refreshRepositoryStatus();
             await checkRebaseStatus();
-            
+
             // Check if there are more conflicts after continuing
             const newStatus = await useAppStore.getState().repositoryStatus;
             if (newStatus && newStatus.conflicts.length === 0 && !(await isRebaseOrMergeInProgress(selectedRepositoryPath))) {
@@ -139,7 +140,7 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] max-w-[600px] bg-[#0A0A0B] border border-destructive/20 p-0 overflow-hidden shadow-2xl rounded-none">
+            <DialogContent hideClose className="sm:max-w-[600px] max-w-[600px] p-0 overflow-hidden">
                 <div className="px-8 py-6">
                     <DialogHeader className="mb-6">
                         <div className="flex items-center gap-3 mb-2">
@@ -151,7 +152,7 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
                             </DialogTitle>
                         </div>
                         <DialogDescription className="text-sm text-muted-foreground/70">
-                            {isRebaseInProgress 
+                            {isRebaseInProgress
                                 ? "Um rebase está em andamento. Resolva os conflitos abaixo e clique em 'Continuar' para prosseguir."
                                 : "Um merge está em andamento. Resolva os conflitos abaixo e clique em 'Continuar' para prosseguir."}
                         </DialogDescription>
@@ -179,10 +180,11 @@ export function MergeConflictModal({ open, onOpenChange }: MergeConflictModalPro
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
                                                 onClick={() => handleOpenInEditor(conflict.path)}
-                                                className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 rounded-lg transition-all flex items-center gap-2"
+                                                className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground border border-border/40 rounded-lg transition-all flex items-center gap-2"
+                                                title={`Open in ${settings.preferredEditor === 'auto' ? 'Default Editor' : settings.preferredEditor}`}
                                             >
-                                                <Zap className="w-3 h-3" />
-                                                Abrir no Editor
+                                                <Code2 className="w-3 h-3 opacity-60" />
+                                                Open in {settings.preferredEditor === 'auto' ? 'Editor' : settings.preferredEditor}
                                             </button>
                                         </div>
                                     </div>

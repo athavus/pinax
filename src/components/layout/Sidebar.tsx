@@ -213,8 +213,8 @@ export function Sidebar() {
                 </div>
 
                 {/* Footer with more depth */}
-                <footer className="px-8 py-8 border-t border-sidebar-border/40 bg-card/40 backdrop-blur-md flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+                <footer className="px-8 py-8 border-t border-sidebar-border/60 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                         {repositories.length} PROJECTS
                     </span>
                     <div className="w-1.5 h-4 bg-primary rounded-none shadow-[0_0_12px_rgba(var(--primary),0.4)]" />

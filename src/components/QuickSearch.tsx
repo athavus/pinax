@@ -101,7 +101,7 @@ export function QuickSearch() {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[600px] p-0 gap-0 top-[20%] translate-y-0 bg-card border border-border shadow-2xl rounded-xl overflow-hidden outline-none ring-0">
+            <DialogContent hideClose className="sm:max-w-[600px] p-0 gap-0 top-[20%] translate-y-0 overflow-hidden outline-none ring-0">
                 <DialogTitle className="sr-only">Quick Open</DialogTitle>
                 <div className="flex items-center px-4 py-3 border-b border-border/40">
                     <Search className="w-5 h-5 text-muted-foreground/50 mr-3" />
