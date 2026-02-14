@@ -257,7 +257,7 @@ export function MainArea() {
                         </button>
 
                         <Dialog open={branchSelectorOpen} onOpenChange={setBranchSelectorOpen}>
-                            <DialogContent className="max-w-xl p-0 overflow-hidden bg-card border-border shadow-2xl rounded-3xl top-28 left-[420px] md:left-[450px] lg:left-[600px] translate-x-0 translate-y-0">
+                            <DialogContent className="max-w-xl p-0 overflow-hidden border-border shadow-2xl rounded-3xl top-28 left-[420px] md:left-[450px] lg:left-[600px] translate-x-0 translate-y-0">
                                 <DialogHeader className="p-6 border-b border-border/10 bg-muted/20">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-primary/10 text-primary">
