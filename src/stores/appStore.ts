@@ -304,30 +304,33 @@ export const useAppStore = create<AppState>((set, get) => ({
 
             // Check for specific stale upstream error
             if (errorMessage.includes("no such ref was fetched") || errorMessage.includes("gone")) {
-                const { branches, selectedRepositoryPath } = get();
-                const currentBranchName = get().repositoryStatus.branch;
-                const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
+                const { branches, selectedRepositoryPath, repositoryStatus } = get();
 
-                if (defaultBranch && currentBranchName !== defaultBranch.name && selectedRepositoryPath) {
-                    try {
-                        // 1. Switch to default branch
-                        await gitCheckout(selectedRepositoryPath, defaultBranch.name);
-                        // 2. Delete the stale branch
-                        await gitDeleteBranch(selectedRepositoryPath, currentBranchName, true);
+                if (selectedRepositoryPath && repositoryStatus) {
+                    const currentBranchName = repositoryStatus.branch;
+                    const defaultBranch = branches.find(b => b.name === "main" || b.name === "master");
 
-                        set({
-                            error: `Branch Cleanup: The remote branch for '${currentBranchName}' was deleted. Pinax has automatically switched you to '${defaultBranch.name}' and removed the stale local branch.`,
-                            isPulling: false,
-                            isLoading: false
-                        });
+                    if (defaultBranch && currentBranchName !== defaultBranch.name) {
+                        try {
+                            // 1. Switch to default branch
+                            await gitCheckout(selectedRepositoryPath, defaultBranch.name);
+                            // 2. Delete the stale branch
+                            await gitDeleteBranch(selectedRepositoryPath, currentBranchName, true);
 
-                        // Refresh state
-                        await get().loadBranches();
-                        const status = await getRepositoryStatus(selectedRepositoryPath);
-                        set({ repositoryStatus: status });
-                        return;
-                    } catch (cleanupError) {
-                        console.error("Auto-cleanup failed:", cleanupError);
+                            set({
+                                error: `Branch Cleanup: The remote branch for '${currentBranchName}' was deleted. Pinax has automatically switched you to '${defaultBranch.name}' and removed the stale local branch.`,
+                                isPulling: false,
+                                isLoading: false
+                            });
+
+                            // Refresh state
+                            await get().loadBranches();
+                            const status = await getRepositoryStatus(selectedRepositoryPath);
+                            set({ repositoryStatus: status });
+                            return;
+                        } catch (cleanupError) {
+                            console.error("Auto-cleanup failed:", cleanupError);
+                        }
                     }
                 }
 
@@ -341,7 +344,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             }
 
             // Check if error is due to conflicts
-            if (errorMessage.includes("conflict") || errorMessage.includes("CONFLICT") || errorMessage.includes("conflito")) {
+            if ((errorMessage.includes("conflict") || errorMessage.includes("CONFLICT") || errorMessage.includes("conflito")) && selectedRepositoryPath) {
                 const status = await getRepositoryStatus(selectedRepositoryPath);
                 set({ repositoryStatus: status, mergeConflictModalOpen: true, isPulling: false, isLoading: false });
             } else {
