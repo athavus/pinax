@@ -45,11 +45,11 @@ Para utilizar a aplicação com clareza, siga os comandos descritos no manual qu
 
 ## Galeria de Screenshots do Projeto
 
-### Screenshot 1
+### Screenshot 1 (Tela inicial no Tema Escuro) 
 ![Screenshot 1](./docs/imgs/screenshot2.png)
 
-### Screenshot 2
+### Screenshot 2 (Buscador de Projetos)
 ![Screenshot 2](./docs/imgs/screenshot3.png)
 
-### Screenshot 3
+### Screenshot 3 (Git Workbench)
 ![Screenshot 3](./docs/imgs/screenshot4.png)
