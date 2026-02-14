@@ -20,7 +20,7 @@ pub async fn pull(path: &Path) -> GitResult<()> {
     let output = execute(path, &["pull"]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Provide better guidance for detached HEAD
         if stderr.contains("You are not currently on a branch") || stderr.contains("not currently on a branch") {
             return Err(GitError {
@@ -42,10 +42,10 @@ pub async fn pull(path: &Path) -> GitResult<()> {
 /// Push changes to remote
 pub async fn push(path: &Path) -> GitResult<()> {
     let output = execute(path, &["push"]).await?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Check if it's a "no upstream" error
         if stderr.contains("has no upstream branch") || stderr.contains("no configured push destination") {
             // Try to get current branch and push with -u origin <branch>
@@ -54,7 +54,7 @@ pub async fn push(path: &Path) -> GitResult<()> {
                 if u_output.status.success() {
                     return Ok(());
                 }
-                
+
                 // If the second attempt also fails, return that error
                 let u_stderr = String::from_utf8_lossy(&u_output.stderr);
                 return Err(GitError {
@@ -64,14 +64,14 @@ pub async fn push(path: &Path) -> GitResult<()> {
                 });
             }
         }
-        
+
         return Err(GitError {
             message: stderr.to_string(),
             command: "push".to_string(),
             exit_code: output.status.code(),
         });
     }
-    
+
     Ok(())
 }
 
@@ -81,9 +81,9 @@ pub async fn push_initial(path: &Path) -> GitResult<()> {
     // Get current branch name
     let branch = execute_string(path, &["rev-parse", "--abbrev-ref", "HEAD"]).await
         .unwrap_or_else(|_| "main".to_string());
-    
+
     let output = execute(path, &["push", "-u", "origin", &branch]).await?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(GitError {
@@ -92,7 +92,7 @@ pub async fn push_initial(path: &Path) -> GitResult<()> {
             exit_code: output.status.code(),
         });
     }
-    
+
     Ok(())
 }
 
@@ -133,13 +133,13 @@ pub async fn commit(path: &Path, message: &str) -> GitResult<()> {
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         // Special case: nothing to commit (including localized messages)
-        if stderr.contains("nothing to commit") || 
+        if stderr.contains("nothing to commit") ||
            stderr.contains("no changes added to commit") ||
            stderr.contains("nada para submeter") ||
            stderr.contains("nenhuma alteração adicionada ao commit") {
             return Ok(());
         }
-        
+
         return Err(GitError {
             message: stderr.to_string(),
             command: "commit".to_string(),
@@ -170,16 +170,14 @@ pub async fn checkout(path: &Path, branch_name: &str) -> GitResult<()> {
     // A better way is to check the remotes list, but for now common naming works
     let remotes_output = execute_string(path, &["remote"]).await.unwrap_or_default();
     let remotes: Vec<&str> = remotes_output.lines().collect();
-    
+
     let mut is_remote = false;
-    let mut remote_name = String::new();
     let mut short_name = String::new();
 
     for remote in remotes {
         let prefix = format!("{}/", remote);
         if branch_name.starts_with(&prefix) {
             is_remote = true;
-            remote_name = remote.to_string();
             short_name = branch_name[prefix.len()..].to_string();
             break;
         }
@@ -209,7 +207,7 @@ pub async fn checkout(path: &Path, branch_name: &str) -> GitResult<()> {
         // Regular local checkout
         execute(path, &["checkout", branch_name]).await?;
     }
-    
+
     Ok(())
 }
 
@@ -230,7 +228,7 @@ pub async fn resolve_conflict(path: &Path, file_path: &str, resolution: &str) ->
             exit_code: None,
         }),
     };
-    
+
     let output = execute(path, &["checkout", arg, "--", file_path]).await?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -240,10 +238,10 @@ pub async fn resolve_conflict(path: &Path, file_path: &str, resolution: &str) ->
             exit_code: output.status.code(),
         });
     }
-    
+
     // After checking out the version, we must add it to mark as resolved
     execute(path, &["add", file_path]).await?;
-    
+
     Ok(())
 }
 
@@ -255,7 +253,7 @@ pub async fn get_file_diff(path: &Path, file_path: &str) -> GitResult<String> {
     if !unstaged.is_empty() {
         return Ok(unstaged);
     }
-    
+
     execute_string(path, &["diff", "--cached", "--no-color", "--", file_path]).await
 }
 
@@ -264,10 +262,10 @@ pub async fn discard_changes(path: &Path, file_path: &str) -> GitResult<()> {
     // Try to restore if it's tracked (staged or unstaged)
     let _ = execute(path, &["restore", "--staged", "--worktree", "--", file_path]).await;
     let _ = execute(path, &["restore", "--", file_path]).await;
-    
+
     // Also try to clean if it's untracked
     let _ = execute(path, &["clean", "-f", "--", file_path]).await;
-    
+
     Ok(())
 }
 
@@ -275,7 +273,7 @@ pub async fn discard_changes(path: &Path, file_path: &str) -> GitResult<()> {
 pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
     use std::fs::OpenOptions;
     use std::io::Write;
-    
+
     let gitignore_path = path.join(".gitignore");
     let mut file = OpenOptions::new()
         .create(true)
@@ -286,13 +284,13 @@ pub async fn add_to_gitignore(path: &Path, file_path: &str) -> GitResult<()> {
             command: "open .gitignore".to_string(),
             exit_code: None,
         })?;
-        
+
     writeln!(file, "{}", file_path).map_err(|e| GitError {
         message: e.to_string(),
         command: "write to .gitignore".to_string(),
         exit_code: None,
     })?;
-    
+
     Ok(())
 }
 
@@ -368,7 +366,7 @@ pub async fn init(path: &Path) -> GitResult<()> {
             exit_code: None,
         })?;
     }
-    
+
     // Create the directory itself if it doesn't exist
     if !path.exists() {
         std::fs::create_dir_all(path).map_err(|e| GitError {
@@ -429,7 +427,7 @@ pub async fn clone(url: &str, path: &Path) -> GitResult<()> {
         })?;
     }
 
-    // Git clone handles directory creation of the target if it doesn't exist, 
+    // Git clone handles directory creation of the target if it doesn't exist,
     // but the parent must exist.
     let mut command = tokio::process::Command::new("git");
     let output = command
@@ -463,7 +461,7 @@ pub async fn is_rebase_or_merge_in_progress(path: &Path) -> GitResult<bool> {
     let rebase_merge = git_dir.join("rebase-merge");
     let merge_head = git_dir.join("MERGE_HEAD");
     let rebase_head = git_dir.join("REBASE_HEAD");
-    
+
     Ok(rebase_apply.exists() || rebase_merge.exists() || merge_head.exists() || rebase_head.exists())
 }
 
@@ -473,7 +471,7 @@ pub async fn continue_rebase_or_merge(path: &Path) -> GitResult<()> {
     let git_dir = path.join(".git");
     let rebase_apply = git_dir.join("rebase-apply");
     let rebase_merge = git_dir.join("rebase-merge");
-    
+
     if rebase_apply.exists() || rebase_merge.exists() {
         // Continue rebase
         let output = execute(path, &["rebase", "--continue"]).await?;
@@ -505,7 +503,7 @@ pub async fn abort_rebase_or_merge(path: &Path) -> GitResult<()> {
     let git_dir = path.join(".git");
     let rebase_apply = git_dir.join("rebase-apply");
     let rebase_merge = git_dir.join("rebase-merge");
-    
+
     if rebase_apply.exists() || rebase_merge.exists() {
         // Abort rebase
         let output = execute(path, &["rebase", "--abort"]).await?;
