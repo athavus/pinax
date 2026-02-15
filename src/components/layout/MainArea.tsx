@@ -2,7 +2,7 @@
  * Main content area displaying selected repository status
  */
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils";
 // import { open } from "@tauri-apps/plugin-opener";
@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function MainArea() {
+    const commitInputRef = useRef<HTMLTextAreaElement>(null);
     const {
         selectedRepositoryPath,
         repositoryStatus,
@@ -189,6 +190,17 @@ export function MainArea() {
 
         resolveGithubAvatars();
     }, [commits, selectedRepo?.remote_url]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-focus commit message input when repository changes
+    useEffect(() => {
+        if (selectedRepositoryPath && commitInputRef.current) {
+            // Small timeout to ensure the component is fully rendered and visible
+            const timer = setTimeout(() => {
+                commitInputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedRepositoryPath]);
 
     if (!selectedRepositoryPath || !selectedRepo) {
         return (
@@ -617,6 +629,7 @@ export function MainArea() {
                     {/* Commit Box at bottom of left column */}
                     <div className="p-4 border-t border-border/10 bg-card/40 backdrop-blur-xl">
                         <textarea
+                            ref={commitInputRef}
                             value={commitMessage}
                             onChange={(e) => setCommitMessage(e.target.value)}
                             placeholder="Briefly describe your changes..."

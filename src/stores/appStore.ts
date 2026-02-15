@@ -229,6 +229,10 @@ export const useAppStore = create<AppState>((set, get) => ({
                 const branches = allBranches.filter(b => b.name !== "HEAD");
                 set({ repositoryStatus: status, branches, isLoading: false });
                 await get().loadHistory();
+                // Auto-stage all changes immediately on selection
+                if (status.unstaged.length > 0 || status.untracked.length > 0) {
+                    await get().stageAll();
+                }
                 // Auto-fetch and sync branches immediately on selection
                 get().fetch();
             } catch (error) {
@@ -966,6 +970,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             }
 
             set({ repositoryStatus: status, isLoading: false });
+            // Auto-stage on refresh if there are changes
+            if (status.unstaged.length > 0 || status.untracked.length > 0) {
+                await get().stageAll();
+            }
         } catch (error) {
             set({
                 error: `Failed to refresh status: ${error}`,
@@ -975,13 +983,28 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     pollRepositoryStatus: async () => {
-        const { selectedRepositoryPath } = get();
+        const { selectedRepositoryPath, repositoryStatus } = get();
         if (!selectedRepositoryPath) return;
 
         // No loading state for polling
         try {
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status });
+
+            // Check if we should auto-stage:
+            // Only auto-stage if the number of unstaged/untracked files has INCREASED
+            // This prevents re-staging files that the user explicitly unstaged.
+            const currentTotalChanges = (repositoryStatus?.unstaged.length || 0) + (repositoryStatus?.untracked.length || 0);
+            const newTotalChanges = status.unstaged.length + status.untracked.length;
+
+            if (newTotalChanges > currentTotalChanges) {
+                // New changes detected, stage all
+                await gitStageAll(selectedRepositoryPath);
+                const updatedStatus = await getRepositoryStatus(selectedRepositoryPath);
+                set({ repositoryStatus: updatedStatus });
+            } else {
+                set({ repositoryStatus: status });
+            }
+
             // Keep branches in sync during polling
             await get().loadBranches();
         } catch (error) {
