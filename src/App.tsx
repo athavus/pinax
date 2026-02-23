@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout";
 import { QuickSearch } from "@/components/QuickSearch";
 import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
+import { GitConfigModal } from "@/components/modals/GitConfigModal";
 import { useKeyBindings, useTheme } from "@/hooks";
 import { useAppStore } from "@/stores/appStore";
 import React from "react";
@@ -23,6 +24,7 @@ export default function App() {
       <MainLayout />
       <QuickSearch />
       <ShortcutsModal />
+      <GitConfigModal />
     </>
   );
 }

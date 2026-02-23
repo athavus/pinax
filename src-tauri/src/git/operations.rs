@@ -1,5 +1,19 @@
 use std::path::Path;
-use super::executor::{execute, execute_string, GitResult, GitError};
+use super::executor::{execute, execute_string, execute_global_string, GitResult, GitError};
+
+/// Retrieve a value from the global Git configuration
+pub async fn get_global_config(key: &str) -> GitResult<String> {
+    execute_global_string(&["config", "--global", key]).await
+}
+
+/// Set the name and email in the global Git configuration
+pub async fn set_global_config(name: &str, email: &str) -> GitResult<()> {
+    // Set user.name
+    execute_global_string(&["config", "--global", "user.name", name]).await?;
+    // Set user.email
+    execute_global_string(&["config", "--global", "user.email", email]).await?;
+    Ok(())
+}
 
 /// Fetch changes from remote
 pub async fn fetch(path: &Path) -> GitResult<()> {

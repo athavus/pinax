@@ -61,7 +61,19 @@ pub fn detect_editors() -> Vec<EditorInfo> {
 }
 
 fn is_binary_available(bin: &str) -> bool {
-    Command::new("which")
+    #[cfg(target_os = "windows")]
+    let cmd = "where";
+    #[cfg(not(target_os = "windows"))]
+    let cmd = "which";
+
+    let mut command = Command::new(cmd);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000);
+    }
+    
+    command
         .arg(bin)
         .output()
         .map(|o| o.status.success())
@@ -69,32 +81,38 @@ fn is_binary_available(bin: &str) -> bool {
 }
 
 fn scan_desktop_files() -> Vec<EditorInfo> {
-    let mut editors = Vec::new();
-    let search_paths = vec![
-        PathBuf::from("/usr/share/applications"),
-        dirs::home_dir()
-            .map(|h| h.join(".local/share/applications"))
-            .unwrap_or_default(),
-    ];
+    #[cfg(target_os = "windows")]
+    return Vec::new();
 
-    for path in search_paths {
-        if !path.exists() {
-            continue;
-        }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let mut editors = Vec::new();
+        let search_paths = vec![
+            PathBuf::from("/usr/share/applications"),
+            dirs::home_dir()
+                .map(|h| h.join(".local/share/applications"))
+                .unwrap_or_default(),
+        ];
 
-        if let Ok(entries) = std::fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.extension().and_then(|s| s.to_str()) == Some("desktop") {
-                    if let Some(editor) = parse_desktop_file(&path) {
-                        editors.push(editor);
+        for path in search_paths {
+            if !path.exists() {
+                continue;
+            }
+
+            if let Ok(entries) = std::fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("desktop") {
+                        if let Some(editor) = parse_desktop_file(&path) {
+                            editors.push(editor);
+                        }
                     }
                 }
             }
         }
-    }
 
-    editors
+        editors
+    }
 }
 
 fn parse_desktop_file(path: &Path) -> Option<EditorInfo> {
@@ -142,8 +160,11 @@ mod tests {
 
     #[test]
     fn test_is_binary_available() {
-        // 'ls' should always be available on Linux
+        #[cfg(not(target_os = "windows"))]
         assert!(is_binary_available("ls"));
+        #[cfg(target_os = "windows")]
+        assert!(is_binary_available("cmd"));
+        
         // 'non_existent_binary_xyz' should not be available
         assert!(!is_binary_available("non_existent_binary_xyz"));
     }

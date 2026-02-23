@@ -145,10 +145,24 @@ async fn git_unstage_file(path: String, file_path: String) -> Result<(), String>
 }
 
 #[tauri::command]
+async fn get_global_git_config(key: String) -> Result<String, String> {
+    git::get_global_config(&key).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn set_global_git_config(name: String, email: String) -> Result<(), String> {
+    git::set_global_config(&name, &email).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn git_stage_all(path: String) -> Result<(), String> {
-    // Stage both modified and untracked files
-    std::process::Command::new("git")
-        .args(&["add", "-A"])
+    let mut cmd = std::process::Command::new("git");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000);
+    }
+    cmd.args(&["add", "-A"])
         .current_dir(Path::new(&path))
         .output()
         .map_err(|e| format!("Failed to stage all: {}", e))?;
@@ -158,8 +172,13 @@ async fn git_stage_all(path: String) -> Result<(), String> {
 #[tauri::command]
 async fn git_unstage_all(path: String) -> Result<(), String> {
     // Unstage all files
-    std::process::Command::new("git")
-        .args(&["reset"])
+    let mut cmd = std::process::Command::new("git");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000);
+    }
+    cmd.args(&["reset"])
         .current_dir(Path::new(&path))
         .output()
         .map_err(|e| format!("Failed to unstage all: {}", e))?;
@@ -314,8 +333,13 @@ SOFTWARE.",
 
 #[tauri::command]
 async fn setup_github_auth() -> Result<(), String> {
-    let output = std::process::Command::new("gh")
-        .args(&["auth", "setup-git"])
+    let mut cmd = std::process::Command::new("gh");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000);
+    }
+    let output = cmd.args(&["auth", "setup-git"])
         .output()
         .map_err(|e| format!("Failed to execute gh auth setup-git: {}", e))?;
 
@@ -351,29 +375,41 @@ async fn detect_editors() -> Result<Vec<editors::EditorInfo>, String> {
 
 #[tauri::command]
 async fn open_terminal(path: String) -> Result<(), String> {
-    let terminals = vec![
-        ("gnome-terminal", vec!["--working-directory", &path]),
-        ("konsole", vec!["--workdir", &path]),
-        ("xfce4-terminal", vec!["--working-directory", &path]),
-        ("terminator", vec!["--working-directory", &path]),
-        ("kitty", vec!["--directory", &path]),
-        ("alacritty", vec!["--working-directory", &path]),
-        ("x-terminal-emulator", vec![]),
-    ];
-
-    for (cmd, args) in terminals {
-        if std::process::Command::new(cmd).args(args).spawn().is_ok() {
-            return Ok(());
-        }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd.exe")
+            .args(&["/K", &format!("cd /d \"{}\"", path)])
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+        return Ok(());
     }
-    
-    Err("No suitable terminal emulator found. Please install gnome-terminal, konsole, or xfce4-terminal.".into())
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let terminals = vec![
+            ("gnome-terminal", vec!["--working-directory", &path]),
+            ("konsole", vec!["--workdir", &path]),
+            ("xfce4-terminal", vec!["--working-directory", &path]),
+            ("terminator", vec!["--working-directory", &path]),
+            ("kitty", vec!["--directory", &path]),
+            ("alacritty", vec!["--working-directory", &path]),
+            ("x-terminal-emulator", vec![]),
+        ];
+
+        for (cmd, args) in terminals {
+            if std::process::Command::new(cmd).args(args).spawn().is_ok() {
+                return Ok(());
+            }
+        }
+
+        Err("No suitable terminal emulator found. Please install gnome-terminal, konsole, or xfce4-terminal.".into())
+    }
 }
 
 #[tauri::command]
 async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Result<(), String> {
     println!("Attempting to open path in editor: {}", path);
-    let mut editors = vec![
+    let mut editors: Vec<(&str, Vec<&str>)> = vec![
         ("code", vec![&path]),
         ("subl", vec![&path]),
         ("zed", vec![&path]),
@@ -390,17 +426,28 @@ async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Resul
         if pref != "auto" && !pref.is_empty() {
             println!("Targeting preferred editor: {}", pref);
             // Try to run the preferred editor directly first
-            if pref.contains('/') {
+            if pref.contains('/') || pref.contains('\\') {
                 match std::process::Command::new(pref).arg(&path).status() {
                     Ok(status) if status.success() => return Ok(()),
                     e => println!("Direct path failed: {:?}", e),
                 }
             } else {
                 // For names, try to launch via shell for better PATH resolution
-                let shell_cmd = format!("{} \"{}\"", pref, path);
-                match std::process::Command::new("sh").args(["-c", &shell_cmd]).status() {
-                    Ok(status) if status.success() => return Ok(()),
-                    e => println!("Shell execution failed: {:?}", e),
+                #[cfg(target_os = "windows")]
+                {
+                    let shell_cmd = format!("{} \"{}\"", pref, path);
+                    match std::process::Command::new("cmd.exe").args(["/C", &shell_cmd]).status() {
+                        Ok(status) if status.success() => return Ok(()),
+                        e => println!("Shell execution failed: {:?}", e),
+                    }
+                }
+                #[cfg(not(target_os = "windows"))]
+                {
+                    let shell_cmd = format!("{} \"{}\"", pref, path);
+                    match std::process::Command::new("sh").args(["-c", &shell_cmd]).status() {
+                        Ok(status) if status.success() => return Ok(()),
+                        e => println!("Shell execution failed: {:?}", e),
+                    }
                 }
             }
 
@@ -419,9 +466,18 @@ async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Resul
         }
     }
 
-    // Try xdg-open as final fallback
-    if std::process::Command::new("xdg-open").arg(&path).status().is_ok() {
-        return Ok(());
+    // Platform-specific fallback
+    #[cfg(target_os = "windows")]
+    {
+        if std::process::Command::new("explorer.exe").arg(&path).status().is_ok() {
+            return Ok(());
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        if std::process::Command::new("xdg-open").arg(&path).status().is_ok() {
+            return Ok(());
+        }
     }
 
     Err("No suitable code editor found. Please check if your preferred editor is installed and in your PATH.".into())
@@ -429,7 +485,12 @@ async fn open_in_editor(path: String, preferred_editor: Option<String>) -> Resul
 
 #[tauri::command]
 async fn open_file_manager(path: String) -> Result<(), String> {
-    std::process::Command::new("xdg-open")
+    #[cfg(target_os = "windows")]
+    let cmd = "explorer.exe";
+    #[cfg(not(target_os = "windows"))]
+    let cmd = "xdg-open";
+
+    std::process::Command::new(cmd)
         .arg(&path)
         .spawn()
         .map_err(|e| e.to_string())?;
@@ -456,6 +517,8 @@ pub fn run() {
             git_pull,
             git_push,
             git_commit,
+            get_global_git_config,
+            set_global_git_config,
             git_stage_file,
             git_unstage_file,
             git_stage_all,

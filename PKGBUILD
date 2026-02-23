@@ -1,6 +1,6 @@
 # Maintainer: Pinax <pinax@localhost>
 pkgname=pinax
-pkgver=1.3.0
+pkgver=1.4.0
 pkgrel=1
 pkgdesc="Pinax Desktop App"
 arch=('x86_64')

@@ -38,6 +38,9 @@ impl From<GitError> for String {
 /// Execute a Git command in the specified directory
 pub async fn execute(repo_path: &Path, args: &[&str]) -> GitResult<Output> {
     let mut command = Command::new("git");
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x08000000);
+
     let output = command
         .args(args)
         .current_dir(repo_path)
@@ -58,6 +61,38 @@ pub async fn execute(repo_path: &Path, args: &[&str]) -> GitResult<Output> {
 /// Execute a Git command and return stdout as a String
 pub async fn execute_string(repo_path: &Path, args: &[&str]) -> GitResult<String> {
     let output = execute(repo_path, args).await?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(GitError {
+            message: stderr.to_string(),
+            command: args.join(" "),
+            exit_code: output.status.code(),
+        });
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    Ok(stdout.trim_end().to_string())
+}
+
+/// Execute a global Git command and return stdout as a String
+pub async fn execute_global_string(args: &[&str]) -> GitResult<String> {
+    let mut command = Command::new("git");
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x08000000);
+
+    let output = command
+        .args(args)
+        .envs(std::env::vars())
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
+        .output()
+        .await
+        .map_err(|e| GitError {
+            message: format!("Failed to execute git: {}", e),
+            command: args.join(" "),
+            exit_code: None,
+        })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
