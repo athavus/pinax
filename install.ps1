@@ -86,6 +86,10 @@ Write-Host ""
 # ---------- Build ----------
 Write-Host "Compilando o projeto (isso pode demorar na primeira vez)..." -ForegroundColor Yellow
 pnpm tauri build
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  Erro na compilacao! Abortando." -ForegroundColor Red
+    exit $LASTEXITCODE
+}
 Write-Host "  Compilacao concluida!" -ForegroundColor Green
 Write-Host ""
 
