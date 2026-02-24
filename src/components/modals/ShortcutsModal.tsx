@@ -76,7 +76,7 @@ export function ShortcutsModal() {
                 </div>
 
                 <div className="p-4 bg-muted/30 border-t border-border/50 flex justify-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Pinax v1.4.0</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Pinax v1.4.3</p>
                 </div>
             </DialogContent>
         </Dialog>

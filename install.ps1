@@ -4,7 +4,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-Write-Host "Instalando Pinax..." -ForegroundColor Cyan
+Write-Host "Instalando Pinax 1.4.3..." -ForegroundColor Cyan
 Write-Host ""
 
 # ---------- Check Admin (for Visual Studio Build Tools if needed) ----------

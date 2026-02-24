@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Instalando Pinax..."
+echo "Instalando Pinax 1.4.3..."
 echo ""
 
 # ---------- Detect distro ----------
