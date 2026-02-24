@@ -274,17 +274,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetch: async () => {
         const { selectedRepositoryPath } = get();
         if (!selectedRepositoryPath) return;
-        set({ isFetching: true, isLoading: true });
+        set({ isFetching: true });
         try {
             await gitFetch(selectedRepositoryPath);
             // Refresh status after fetch
             const status = await getRepositoryStatus(selectedRepositoryPath);
-            set({ repositoryStatus: status, isFetching: false, isLoading: false });
+            set({ repositoryStatus: status, isFetching: false });
             // Refresh branches after fetch to catch pruned branches
             await get().loadBranches();
             await get().loadHistory();
         } catch (error) {
-            set({ error: `Fetch failed: ${error}`, isFetching: false, isLoading: false });
+            set({ error: `Fetch failed: ${error}`, isFetching: false });
         }
     },
 

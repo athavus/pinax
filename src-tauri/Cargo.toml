@@ -1,7 +1,7 @@
 [package]
 name = "pinax"
-version = "1.4.0"
-description = "A Tauri App"
+version = "1.4.3"
+description = "A keyboard-first desktop git client"
 authors = ["you"]
 edition = "2021"
 
